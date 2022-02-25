@@ -9,7 +9,7 @@ pub struct Echo {
     #[prost(int64, tag = "1")]
     pub x: i64,
 }
-
+                
 service! {
     service echo {
         rpc ping(Echo) returns (Echo);

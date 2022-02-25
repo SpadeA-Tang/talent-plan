@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -5,6 +6,8 @@ use std::time::Duration;
 use crate::msg::*;
 use crate::service::*;
 use crate::*;
+
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // TTL is used for a lock key.
 // If the key's lifetime exceeds this value, it should be cleaned up.
@@ -14,6 +17,7 @@ const TTL: u64 = Duration::from_millis(100).as_nanos() as u64;
 #[derive(Clone, Default)]
 pub struct TimestampOracle {
     // You definitions here if needed.
+    current_timestamp: u64,
 }
 
 #[async_trait::async_trait]
@@ -21,7 +25,11 @@ impl timestamp::Service for TimestampOracle {
     // example get_timestamp RPC handler.
     async fn get_timestamp(&self, _: TimestampRequest) -> labrpc::Result<TimestampResponse> {
         // Your code here.
-        unimplemented!()
+        let start = SystemTime::now();
+        let since_the_epoch = start
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+        Ok(TimestampResponse {ts: since_the_epoch.as_millis() as u64})
     }
 }
 

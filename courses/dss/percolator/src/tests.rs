@@ -48,24 +48,31 @@ fn init(num_clinet: usize) -> (Network, Vec<Client>, Arc<CommitHooks>) {
 
     let mut clients = vec![];
     let rn = Network::new();
+
     let tso_server_name = "tso_server";
     let mut tso_server_builder = ServerBuilder::new(tso_server_name.to_owned());
     let server_name = "server";
     let mut server_builder = ServerBuilder::new(server_name.to_owned());
+
     let tso: TimestampOracle = Default::default();
+    // 向tso_server_builder添加tso service
     add_tso_service(tso, &mut tso_server_builder).unwrap();
+
     let store: MemoryStorage = Default::default();
     add_transaction_service(store, &mut server_builder).unwrap();
+
     let tso_server = tso_server_builder.build();
     let server = server_builder.build();
     rn.add_server(tso_server);
     rn.add_server(server);
+
     let hook = Arc::new(CommitHooks {
         drop_req: AtomicBool::new(false),
         drop_resp: AtomicBool::new(false),
         fail_primary: AtomicBool::new(false),
     });
     for i in 0..num_clinet {
+        // 创建txn client并连接到rn
         let txn_name_string = format!("txn{}", i);
         let txn_name = txn_name_string.as_str();
         let cli = rn.create_client(txn_name.to_owned());
@@ -73,12 +80,16 @@ fn init(num_clinet: usize) -> (Network, Vec<Client>, Arc<CommitHooks>) {
         let txn_client = TransactionClient::new(cli);
         rn.enable(txn_name, true);
         rn.connect(txn_name, server_name);
+
+        // 创建tso client并连接到rn
         let tso_name_string = format!("tso{}", i);
         let tso_name = tso_name_string.as_str();
         let cli = rn.create_client(tso_name.to_owned());
         let tso_client = TSOClient::new(cli);
         rn.enable(tso_name, true);
         rn.connect(tso_name, tso_server_name);
+
+        // 用才创建的txn client和tso client来创建client 
         clients.push(crate::client::Client::new(tso_client, txn_client));
     }
 
@@ -93,6 +104,7 @@ fn test_get_timestamp_under_unreliable_network() {
     for (i, _) in clients.iter().enumerate() {
         let client = clients[i].to_owned();
         let tso_name_string = format!("tso{}", i);
+        // shut掉client的网络
         rn.enable(tso_name_string.as_str(), false);
         children.push(thread::spawn(move || {
             let res = client.get_timestamp();
@@ -105,6 +117,7 @@ fn test_get_timestamp_under_unreliable_network() {
     }
 
     thread::sleep(Duration::from_millis(100));
+    // 恢复client的网络
     rn.enable("tso0", true);
     thread::sleep(Duration::from_millis(200));
     rn.enable("tso1", true);
