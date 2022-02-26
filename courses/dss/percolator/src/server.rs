@@ -9,6 +9,7 @@ use crate::*;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use std::ops::Bound::Included;
 // TTL is used for a lock key.
 // If the key's lifetime exceeds this value, it should be cleaned up.
 // Otherwise, the operation should back off.
@@ -29,7 +30,9 @@ impl timestamp::Service for TimestampOracle {
         let since_the_epoch = start
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards");
-        Ok(TimestampResponse {ts: since_the_epoch.as_millis() as u64})
+        Ok(TimestampResponse {
+            ts: since_the_epoch.as_millis() as u64,
+        })
     }
 }
 
@@ -72,21 +75,84 @@ impl KvTable {
         ts_end_inclusive: Option<u64>,
     ) -> Option<(&Key, &Value)> {
         // Your code here.
-        unimplemented!()
+        let start_key: Key = (key.clone(), ts_start_inclusive.expect("Non in timestamp"));
+        let end_key: Key = (key.clone(), ts_end_inclusive.expect("Non in timestamp"));
+        let mut res = match column {
+            Column::Data => {
+                let range = self.data.range((Included(start_key), Included(end_key)));
+                range.last()
+            }
+            Column::Write => {
+                let range = self.write.range((Included(start_key), Included(end_key)));
+                range.last()
+            }
+            Column::Lock => {
+                let range = self.lock.range((Included(start_key), Included(end_key)));
+                range.last()
+            }
+        };
+
+
+        // 判断the latest key-value record是否代表删除
+        if let Some(res_inner) = res {
+            let val = res_inner.1;
+            match val {
+                Value::Timestamp(ts) => {
+                    if *ts == 0 as u64 {
+                        return None;
+                    }
+                },
+                Value::Vector(vec) => {
+                    if vec.len() == 0 {
+                        return None;
+                    }
+                }
+            }
+        };
+
+        res
     }
 
     // Writes a record to a specified column in MemoryStorage.
     #[inline]
     fn write(&mut self, key: Vec<u8>, column: Column, ts: u64, value: Value) {
         // Your code here.
-        unimplemented!()
+        match column {
+            Column::Data => {
+                self.data.insert((key, ts), value);
+            }
+            Column::Write => {
+                self.write.insert((key, ts), value);
+            }
+            Column::Lock => {
+                self.lock.insert((key, ts), value);
+            }
+        }
     }
 
     #[inline]
     // Erases a record from a specified column in MemoryStorage.
     fn erase(&mut self, key: Vec<u8>, column: Column, commit_ts: u64) {
         // Your code here.
-        unimplemented!()
+        // Column::Write 列的Value可能是Value::Timestamp类型的, 对于该类型，用0代表删除了
+        // 对于其他的，用空vec代表删除
+        match column {
+            Column::Write => {
+                self.write(key, column, commit_ts, Value::Timestamp(0));
+            },
+            _ => {
+                self.write(key, column, commit_ts, Value::Vector(Vec::new()));
+            }
+        }
+        
+    }
+
+    pub fn new() -> Self {
+        KvTable {
+            data: BTreeMap::new(),
+            write: BTreeMap::new(),
+            lock: BTreeMap::new(),
+        }
     }
 }
 
@@ -122,5 +188,87 @@ impl MemoryStorage {
     fn back_off_maybe_clean_up_lock(&self, start_ts: u64, key: Vec<u8>) {
         // Your code here.
         unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::str;
+
+    // 封装read， 使得读出来更直接
+    fn read_val_in_table(
+        kv_table: &KvTable,
+        key: &str,
+        col: Column,
+        start_ts: Option<u64>,
+        end_ts: Option<u64>,
+    ) -> Option<String> {
+        match kv_table.read(key.as_bytes().to_owned(), Column::Data, start_ts, end_ts) {
+            Some(val) => match val.1 {
+                Value::Timestamp(ts) => Some(ts.to_string()),
+                Value::Vector(us) => Some(str::from_utf8(us).expect("Something wrong").to_owned()),
+            },
+            None => None,
+        }
+    }
+
+    #[test]
+    fn test_kvtable_read_key_ts() {
+        let mut kv_table = KvTable::new();
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Data,
+            1,
+            Value::Vector("val1".as_bytes().to_owned()),
+        );
+
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Data,
+            2,
+            Value::Vector("val2".as_bytes().to_owned()),
+        );
+
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Data,
+            4,
+            Value::Vector("val4".as_bytes().to_owned()),
+        );
+
+        let res = read_val_in_table(&kv_table, "key1", Column::Data, Some(0), Some(3));
+
+        assert_eq!(Some("val2".to_owned()), res);
+    }
+
+    #[test]
+    fn test_kvtable_nonexsit_key() {
+        let mut kv_table = KvTable::new();
+        let res = read_val_in_table(&kv_table, "key1", Column::Data, Some(0), Some(1));
+        assert_eq!(None, res);
+    }
+
+    #[test]
+    fn test_kvtable_removed_key() {
+        let mut kv_table = KvTable::new();
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Data,
+            1,
+            Value::Vector("val1".as_bytes().to_owned()),
+        );
+        let res = read_val_in_table(&kv_table, "key1", Column::Data, Some(0), Some(2));
+        assert_eq!(Some("val1".to_owned()), res);
+        kv_table.erase("key1".as_bytes().to_owned(), Column::Data, 3);
+
+        // we can still read it at previous timestamp
+        let res = read_val_in_table(&kv_table, "key1", Column::Data, Some(0), Some(2));
+        assert_eq!(Some("val1".to_owned()), res);
+
+        // but we cannot read it after ts 3
+        let res = read_val_in_table(&kv_table, "key1", Column::Data, Some(3), Some(3));
+        println!("{:?}", res);
+        assert_eq!(None, res);
     }
 }

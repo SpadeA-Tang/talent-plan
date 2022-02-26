@@ -25,14 +25,16 @@ const RETRY_TIMES: usize = 3;
 pub struct Client {
     // Your definitions here.
     tso_client: TSOClient, 
-    txn_client: TransactionClient
+    txn_client: TransactionClient,
+
+    start_ts_ : u64,
 }
 
 impl Client {
     /// Creates a new Client.
     pub fn new(tso_client: TSOClient, txn_client: TransactionClient) -> Client {
         // Your code here.
-        Client {tso_client, txn_client}
+        Client {tso_client, txn_client, start_ts_: 0}
     }
 
     /// Gets a timestamp from a TSO.
@@ -54,7 +56,7 @@ impl Client {
     /// Begins a new transaction.
     pub fn begin(&mut self) {
         // Your code here.
-        unimplemented!()
+        self.start_ts_ = self.get_timestamp().expect("Error -- Get Timestamp Timeout");
     }
 
     /// Gets the value for a given key.

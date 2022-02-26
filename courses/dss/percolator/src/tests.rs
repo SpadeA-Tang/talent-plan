@@ -149,6 +149,7 @@ fn test_predicate_many_preceders_read_predicates() {
     client2.set(b"3".to_vec(), b"30".to_vec());
     assert_eq!(client2.commit(), Ok(true));
 
+    // client1先于client2发起操作，并且没有commit，所以他不应该能读到client2的写入
     assert_eq!(client1.get(b"3".to_vec()), Ok(Vec::new()));
 }
 
