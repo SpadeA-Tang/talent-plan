@@ -1,5 +1,8 @@
+use core::panic;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::convert::TryInto;
+use std::str::from_utf8;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -8,6 +11,11 @@ use crate::service::*;
 use crate::*;
 
 use std::time::{SystemTime, UNIX_EPOCH};
+
+// use env_logger::fmt::Timestamp;
+use labcodec::DecodeError;
+use labrpc::{Error, Result};
+use prost::bytes::Buf;
 
 use std::ops::Bound::Included;
 // TTL is used for a lock key.
@@ -39,10 +47,59 @@ impl timestamp::Service for TimestampOracle {
 // Key is a tuple (raw key, timestamp).
 pub type Key = (Vec<u8>, u64);
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Value {
     Timestamp(u64),
     Vector(Vec<u8>),
+}
+
+use std::fmt;
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Value::Timestamp(ts) => {
+                write!(f, "{}", ts)
+            },
+            Value::Vector(ve) => {
+                write!(f, "{}", std::str::from_utf8(ve).unwrap())
+
+            }
+        }
+    }
+}
+
+impl Value {
+    pub(crate) fn encode(&self) -> Vec<u8> {
+        match self {
+            Value::Timestamp(ts) => {
+                let mut res = vec![b'0'];
+                res.extend(ts.to_string().as_bytes());
+                res
+            }
+            Value::Vector(ve) => {
+                let mut res = vec![b'1'];
+                res.extend(ve.iter());
+                res
+            }
+        }
+    }
+
+    pub(crate) fn decode(val: Vec<u8>) -> Result<Value> {
+        if val.len() == 0 {
+            return Err(Error::Decode(prost::DecodeError::new("Decode Value error")));
+        }
+        match val[0] {
+            b'0' => Ok(Value::Timestamp(
+                from_utf8(&val)
+                    .expect("Decode Timestamp Err")
+                    .parse()
+                    .expect("Decode Timestamp Err"),
+            )),
+            b'1' => Ok(Value::Vector(val[1..].to_owned())),
+            _ => Err(Error::Decode(prost::DecodeError::new("Decode Value error"))),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -52,6 +109,19 @@ pub enum Column {
     Write,
     Data,
     Lock,
+}
+
+impl Column {
+    pub(crate) fn decode(column: u32) -> Result<Column> {
+        match column {
+            1 => Ok(Column::Write),
+            2 => Ok(Column::Data),
+            3 => Ok(Column::Lock),
+            _ => Err(Error::Decode(prost::DecodeError::new(
+                "Decode Column error",
+            ))),
+        }
+    }
 }
 
 // KvTable is used to simulate Google's Bigtable.
@@ -92,7 +162,6 @@ impl KvTable {
             }
         };
 
-
         // 判断the latest key-value record是否代表删除
         if let Some(res_inner) = res {
             let val = res_inner.1;
@@ -101,7 +170,7 @@ impl KvTable {
                     if *ts == 0 as u64 {
                         return None;
                     }
-                },
+                }
                 Value::Vector(vec) => {
                     if vec.len() == 0 {
                         return None;
@@ -139,12 +208,11 @@ impl KvTable {
         match column {
             Column::Write => {
                 self.write(key, column, commit_ts, Value::Timestamp(0));
-            },
+            }
             _ => {
                 self.write(key, column, commit_ts, Value::Vector(Vec::new()));
             }
         }
-        
     }
 
     pub fn new() -> Self {
@@ -168,7 +236,37 @@ impl transaction::Service for MemoryStorage {
     // example get RPC handler.
     async fn get(&self, req: GetRequest) -> labrpc::Result<GetResponse> {
         // Your code here.
-        unimplemented!()
+        // 先从write列中读取req.ts能读到的最新的data的ts
+        let kvtable = self.data.lock().unwrap();
+        match kvtable.read(
+            req.key.clone(),
+            Column::Write,
+            Some(req.start_ts),
+            Some(req.end_ts),
+        ) {
+            Some(res) => {
+                if let Value::Timestamp(ts) = res.1 {
+                    // 再从data列读取与才在column列读到的ts相关联的数据
+                    match kvtable.read(req.key, Column::Data, Some(*ts), Some(*ts)) {
+                        Some(res) => Ok(GetResponse {
+                            ts: *ts,
+                            val: res.1.encode(),
+                        }),
+                        None => {
+                            panic!("The data specified by write column should be exist")
+                        }
+                    }
+                } else {
+                    panic!("Only timestamp type should be in write column")
+                }
+            }
+            None => {
+                return Ok(GetResponse {
+                    ts: 0,
+                    val: Vec::new(),
+                });
+            }
+        }
     }
 
     // example prewrite RPC handler.
@@ -192,7 +290,7 @@ impl MemoryStorage {
 }
 
 #[cfg(test)]
-mod test {
+mod test_kvtable {
     use super::*;
     use std::str;
 
@@ -213,6 +311,7 @@ mod test {
         }
     }
 
+    // 验证读不到比ts更新的值
     #[test]
     fn test_kvtable_read_key_ts() {
         let mut kv_table = KvTable::new();
@@ -270,5 +369,96 @@ mod test {
         let res = read_val_in_table(&kv_table, "key1", Column::Data, Some(3), Some(3));
         println!("{:?}", res);
         assert_eq!(None, res);
+    }
+}
+
+#[cfg(test)]
+mod test_value {
+    use super::*;
+
+    #[test]
+    fn test_vec() {
+        let mut val = Value::Vector("Something".as_bytes().to_owned());
+        let encode = val.encode();
+        let val = Value::decode(encode).unwrap();
+        assert_eq!(Value::Vector("Something".as_bytes().to_owned()), val);
+
+        let mut val = Value::Vector("".as_bytes().to_owned());
+        let encode = val.encode();
+        let val = Value::decode(encode).unwrap();
+        assert_eq!(Value::Vector("".as_bytes().to_owned()), val);
+    }
+
+    #[test]
+    fn test_timestamp() {
+        let mut val = Value::Timestamp(12);
+        let encode = val.encode();
+        let val = Value::decode(encode).unwrap();
+        assert_eq!(Value::Timestamp(12), val);
+    }
+}
+
+#[cfg(test)]
+mod test_memory_storage {
+    use crate::service::transaction::Service;
+
+    use super::*;
+    use futures::executor::block_on;
+
+    #[test]
+    fn test_get() {
+        let mut kv_table = KvTable::new();
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Data,
+            1,
+            Value::Vector("val1".as_bytes().to_owned()),
+        );
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Write,
+            2,
+            Value::Timestamp(1),
+        );
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Data,
+            3,
+            Value::Vector("val2".as_bytes().to_owned()),
+        );
+
+        kv_table.write(
+            "key1".as_bytes().to_owned(),
+            Column::Write,
+            4,
+            Value::Timestamp(3),
+        );
+
+        let mut mem = MemoryStorage {
+            data: Arc::new(Mutex::new(kv_table)),
+        };
+
+        let res = block_on(async {
+            mem.get(GetRequest {
+                start_ts: 0,
+                end_ts: 3,
+                key: "key1".as_bytes().to_owned(),
+            }).await
+        }).unwrap();
+        let val = Value::decode(res.val).unwrap();
+        println!("The val got {}", val);
+        assert_eq!(Value::Vector("val1".as_bytes().to_owned()), val);
+
+        let res = block_on(async {
+            mem.get(GetRequest {
+                start_ts: 0,
+                end_ts: 4,
+                key: "key1".as_bytes().to_owned(),
+            }).await
+        }).unwrap();
+        let val = Value::decode(res.val).unwrap();
+        println!("The val got {}", val);
+        assert_eq!(Value::Vector("val2".as_bytes().to_owned()), val);
+
     }
 }

@@ -3,7 +3,8 @@ use labrpc::*;
 use crate::service::{TSOClient, TransactionClient};
 
 // new added ---------------
-use crate::msg::{TimestampRequest, TimestampResponse,};
+use crate::msg::{GetRequest, TimestampRequest, TimestampResponse};
+use futures::executor::block_on;
 use std::thread;
 use std::time::Duration;
 
@@ -24,29 +25,34 @@ const RETRY_TIMES: usize = 3;
 #[derive(Clone)]
 pub struct Client {
     // Your definitions here.
-    tso_client: TSOClient, 
+    tso_client: TSOClient,
     txn_client: TransactionClient,
 
-    start_ts_ : u64,
+    start_ts_: u64,
 }
 
 impl Client {
     /// Creates a new Client.
     pub fn new(tso_client: TSOClient, txn_client: TransactionClient) -> Client {
         // Your code here.
-        Client {tso_client, txn_client, start_ts_: 0}
+        Client {
+            tso_client,
+            txn_client,
+            start_ts_: 0,
+        }
     }
 
     /// Gets a timestamp from a TSO.
     pub fn get_timestamp(&self) -> Result<u64> {
         // Your code here.
-        use futures::executor::block_on;
         let mut wait_factor = 1;
         for i in 0..RETRY_TIMES {
-            if let Ok(res) = block_on(async {self.tso_client.get_timestamp(&TimestampRequest{}).await} ) {
-                return Ok(res.ts)
+            if let Ok(res) =
+                block_on(async { self.tso_client.get_timestamp(&TimestampRequest {}).await })
+            {
+                return Ok(res.ts);
             }
-            thread::sleep(Duration::from_millis( wait_factor * BACKOFF_TIME_MS));
+            thread::sleep(Duration::from_millis(wait_factor * BACKOFF_TIME_MS));
             wait_factor <<= 1;
         }
 
@@ -56,24 +62,48 @@ impl Client {
     /// Begins a new transaction.
     pub fn begin(&mut self) {
         // Your code here.
-        self.start_ts_ = self.get_timestamp().expect("Error -- Get Timestamp Timeout");
+        self.start_ts_ = self
+            .get_timestamp()
+            .expect("Error -- Get Timestamp Timeout");
     }
 
     /// Gets the value for a given key.
     pub fn get(&self, key: Vec<u8>) -> Result<Vec<u8>> {
         // Your code here.
-        unimplemented!()
+        if let Ok(res) = block_on(async {
+            self.txn_client
+                .get(&GetRequest {
+                    start_ts: 0,
+                    end_ts: self.start_ts_,
+                    key,
+                })
+                .await
+        }) {
+            return Ok(res.val);
+        };
+
+        Ok(Vec::new())
     }
 
     /// Sets keys in a buffer until commit time.
     pub fn set(&mut self, key: Vec<u8>, value: Vec<u8>) {
         // Your code here.
-        unimplemented!()
     }
 
     /// Commits a transaction.
     pub fn commit(&self) -> Result<bool> {
         // Your code here.
         unimplemented!()
+    }
+}
+
+
+
+#[cfg(test)]
+mod test {
+
+    #[test]
+    fn test_client_get() {
+        
     }
 }
