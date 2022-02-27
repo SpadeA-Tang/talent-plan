@@ -3,8 +3,9 @@ use labrpc::*;
 use crate::service::{TSOClient, TransactionClient};
 
 // new added ---------------
-use crate::msg::{GetRequest, TimestampRequest, TimestampResponse};
+use crate::msg::{CommitRequest, GetRequest, PrewriteRequest, TimestampRequest, TimestampResponse};
 use futures::executor::block_on;
+use core::panic;
 use std::thread;
 use std::time::Duration;
 
@@ -29,6 +30,7 @@ pub struct Client {
     txn_client: TransactionClient,
 
     start_ts_: u64,
+    write_buf: Vec<(Vec<u8>, Vec<u8>)>,
 }
 
 impl Client {
@@ -39,6 +41,7 @@ impl Client {
             tso_client,
             txn_client,
             start_ts_: 0,
+            write_buf: Vec::new(),
         }
     }
 
@@ -73,8 +76,7 @@ impl Client {
         if let Ok(res) = block_on(async {
             self.txn_client
                 .get(&GetRequest {
-                    start_ts: 0,
-                    end_ts: self.start_ts_,
+                    start_ts: self.start_ts_,
                     key,
                 })
                 .await
@@ -88,22 +90,84 @@ impl Client {
     /// Sets keys in a buffer until commit time.
     pub fn set(&mut self, key: Vec<u8>, value: Vec<u8>) {
         // Your code here.
+        self.write_buf.push((key, value));
     }
 
     /// Commits a transaction.
     pub fn commit(&self) -> Result<bool> {
         // Your code here.
-        unimplemented!()
+        if self.write_buf.len() == 0 {
+            return Ok(true);
+        }
+        let primary = PrewriteRequest {
+            start_ts: self.start_ts_,
+            key: self.write_buf[0].0.clone(),
+            val: self.write_buf[0].1.clone(),
+            prime: self.write_buf[0].0.clone(),
+        };
+
+        // 首先预写入primary
+        if let Ok(res) = block_on(async { self.txn_client.prewrite(&primary).await }) {
+            if !res.success {
+                return Ok(false);
+            }
+        }
+
+        // 然后写入所有的secondary
+        for i in 1..self.write_buf.len() {
+            let secondary = PrewriteRequest {
+                start_ts: self.start_ts_,
+                key: self.write_buf[i].0.clone(),
+                val: self.write_buf[i].1.clone(),
+                prime: self.write_buf[0].0.clone(),
+            };
+            if let Ok(res) = block_on(async { self.txn_client.prewrite(&secondary).await }) {
+                if !res.success {
+                    return Ok(false);
+                }
+            }
+        }
+
+        // Its time to commit
+        // First, get the commit timestamp
+        let commit_ts = self.get_timestamp()?;
+
+        // First commit the primary
+        let primary = CommitRequest {
+            is_primary: true,
+            start_ts: self.start_ts_,
+            commit_ts,
+            key: self.write_buf[0].0.clone(),
+        };
+        if let Ok(res) = block_on(async { self.txn_client.commit(&primary).await }) {
+            if !res.success {
+                return Ok(false);
+            }
+        };
+
+        for i in 1..self.write_buf.len() {
+            let secondary = CommitRequest {
+                is_primary: false,
+                start_ts: self.start_ts_,
+                commit_ts,
+                key: self.write_buf[i].0.clone(),
+            };
+            if let Ok(res) = block_on(async { self.txn_client.commit(&secondary).await }) {
+                if !res.success {
+                    panic!("It should be commit")
+                }
+            } else {
+                panic!("It should be commit")
+            }
+        }
+
+        Ok(true)
     }
 }
-
-
 
 #[cfg(test)]
 mod test {
 
     #[test]
-    fn test_client_get() {
-        
-    }
+    fn test_client_get() {}
 }

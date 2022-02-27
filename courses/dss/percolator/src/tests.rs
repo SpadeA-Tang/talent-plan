@@ -172,6 +172,7 @@ fn test_predicate_many_preceders_write_predicates() {
 
     client1.set(b"1".to_vec(), b"20".to_vec());
     client1.set(b"2".to_vec(), b"30".to_vec());
+
     assert_eq!(client1.get(b"2".to_vec()), Ok(b"20".to_vec()));
 
     client2.set(b"2".to_vec(), b"40".to_vec());
