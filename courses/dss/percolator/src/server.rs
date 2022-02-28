@@ -68,39 +68,6 @@ impl fmt::Display for Value {
     }
 }
 
-impl Value {
-    pub(crate) fn encode(&self) -> Vec<u8> {
-        match self {
-            Value::Timestamp(ts) => {
-                let mut res = vec![b'0'];
-                res.extend(ts.to_string().as_bytes());
-                res
-            }
-            Value::Vector(ve) => {
-                let mut res = vec![b'1'];
-                res.extend(ve.iter());
-                res
-            }
-        }
-    }
-
-    pub(crate) fn decode(val: Vec<u8>) -> Result<Option<Value>> {
-        if val.len() == 0 {
-            return Ok(None);
-        }
-        match val[0] {
-            b'0' => Ok(Some(Value::Timestamp(
-                from_utf8(&val)
-                    .expect("Decode Timestamp Err")
-                    .parse()
-                    .expect("Decode Timestamp Err"),
-            ))),
-            b'1' => Ok(Some(Value::Vector(val[1..].to_owned()))),
-            _ => Err(Error::Decode(prost::DecodeError::new("Decode Value error"))),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Write(Vec<u8>, Vec<u8>);
 
@@ -422,32 +389,6 @@ mod test_kvtable {
 }
 
 #[cfg(test)]
-mod test_value {
-    use super::*;
-
-    #[test]
-    fn test_vec() {
-        let mut val = Value::Vector("Something".as_bytes().to_owned());
-        let encode = val.encode();
-        let val = Value::decode(encode).unwrap();
-        assert_eq!(Some(Value::Vector("Something".as_bytes().to_owned())), val);
-
-        let mut val = Value::Vector("".as_bytes().to_owned());
-        let encode = val.encode();
-        let val = Value::decode(encode).unwrap();
-        assert_eq!(Some(Value::Vector("".as_bytes().to_owned())), val);
-    }
-
-    #[test]
-    fn test_timestamp() {
-        let mut val = Value::Timestamp(12);
-        let encode = val.encode();
-        let val = Value::decode(encode).unwrap();
-        assert_eq!(Some(Value::Timestamp(12)), val);
-    }
-}
-
-#[cfg(test)]
 mod test_memory_storage {
     use crate::service::transaction::Service;
 
@@ -495,8 +436,7 @@ mod test_memory_storage {
             .await
         })
         .unwrap();
-        let val = Value::decode(res.val).unwrap();
-        assert_eq!(Some(Value::Vector("val1".as_bytes().to_owned())), val);
+        assert_eq!("val1".as_bytes().to_owned(), res.val);
 
         let res = block_on(async {
             mem.get(GetRequest {
@@ -506,8 +446,7 @@ mod test_memory_storage {
             .await
         })
         .unwrap();
-        let val = Value::decode(res.val).unwrap();
-        assert_eq!(Some(Value::Vector("val2".as_bytes().to_owned())), val);
+        assert_eq!("val2".as_bytes().to_owned(), res.val);
 
         let res = block_on(async {
             mem.get(GetRequest {
@@ -517,7 +456,7 @@ mod test_memory_storage {
             .await
         })
         .unwrap();
-        assert_eq!(None, Value::decode(res.val).unwrap())
+        assert_eq!(Vec::<u8>::new(), res.val)
     }
 
     #[test]
