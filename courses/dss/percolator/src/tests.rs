@@ -404,6 +404,7 @@ fn test_commit_primary_success_without_response() {
     assert_eq!(client1.get(b"5".to_vec()).unwrap(), b"50");
 }
 
+
 #[test]
 fn test_commit_primary_fail() {
     let (_, clients, hook) = init(2);

@@ -4,8 +4,8 @@ use crate::service::{TSOClient, TransactionClient};
 
 // new added ---------------
 use crate::msg::{CommitRequest, GetRequest, PrewriteRequest, TimestampRequest, TimestampResponse};
-use futures::executor::block_on;
 use core::panic;
+use futures::executor::block_on;
 use std::thread;
 use std::time::Duration;
 
@@ -111,6 +111,8 @@ impl Client {
             if !res.success {
                 return Ok(false);
             }
+        } else {
+            return Ok(false);
         }
 
         // 然后写入所有的secondary
@@ -139,11 +141,19 @@ impl Client {
             commit_ts,
             key: self.write_buf[0].0.clone(),
         };
-        if let Ok(res) = block_on(async { self.txn_client.commit(&primary).await }) {
-            if !res.success {
-                return Ok(false);
+
+        match block_on(async { self.txn_client.commit(&primary).await }) {
+            Ok(res) => {
+                if !res.success {
+                    return Ok(false);
+                }
             }
-        };
+            // 这里需要判断错误的原因，如果是req都没发出去，那么txn应该被aborted，直接返回fail
+            Err(Error::Other(e)) if &e == "reqhook" => {
+                return Ok(false)
+            },
+            Err(e) => return Err(e),
+        }
 
         for i in 1..self.write_buf.len() {
             let secondary = CommitRequest {
@@ -152,22 +162,14 @@ impl Client {
                 commit_ts,
                 key: self.write_buf[i].0.clone(),
             };
+
             if let Ok(res) = block_on(async { self.txn_client.commit(&secondary).await }) {
                 if !res.success {
                     panic!("It should be commit")
                 }
-            } else {
-                panic!("It should be commit")
             }
         }
 
         Ok(true)
     }
-}
-
-#[cfg(test)]
-mod test {
-
-    #[test]
-    fn test_client_get() {}
 }
