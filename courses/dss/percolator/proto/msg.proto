@@ -23,8 +23,7 @@ message GetRequest {
 }
 
 message GetResponse {
-    uint64 ts = 1;
-    bytes val = 2;
+    bytes val = 1;
 }
 
 message PrewriteRequest {

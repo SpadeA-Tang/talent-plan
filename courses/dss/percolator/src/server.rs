@@ -148,8 +148,8 @@ impl KvTable {
         if let Some(res_inner) = res {
             let val = res_inner.1;
             match val {
-                Value::Timestamp(ts) => {
-                    if *ts == 0 as u64 {
+                &Value::Timestamp(ts) => {
+                    if ts == 0 as u64 {
                         return None;
                     }
                 }
@@ -268,7 +268,6 @@ impl transaction::Service for MemoryStorage {
                         match kvtable.read(req.key, Column::Data, Some(*ts), Some(*ts)) {
                             Some((_, Value::Vector(res))) => {
                                 return Ok(GetResponse {
-                                    ts: *ts,
                                     val: res.to_vec(),
                                 });
                             }
@@ -284,7 +283,6 @@ impl transaction::Service for MemoryStorage {
                 }
                 None => {
                     return Ok(GetResponse {
-                        ts: 0,
                         val: Vec::new(),
                     });
                 }
