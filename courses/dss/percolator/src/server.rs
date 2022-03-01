@@ -288,8 +288,6 @@ impl transaction::Service for MemoryStorage {
                 }
             }
         }
-
-        Err(Error::Timeout)
     }
 
     // example prewrite RPC handler.
@@ -370,6 +368,7 @@ impl MemoryStorage {
                     log::info!("");
                     log::info!("Roll-back: Erase the primary's key");
                     kvtable.erase(primary, Column::Lock, start_ts);
+                    kvtable.erase(key.clone(), Column::Lock, start_ts);
                 } else {
                     // 不存在，说明已经提交了；此时需要roll-forward； 此时在主key的Column列 能找到 值为 Value::Timestamp(old_start_ts)
                     // 或者主key已经被其他事物清理掉；此时需要roll-back；在主key的Column列 无法找到 值为 Value::Timestamp(old_start_ts)
