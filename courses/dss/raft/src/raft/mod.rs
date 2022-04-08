@@ -1,7 +1,7 @@
 use std::sync::mpsc::{sync_channel, Receiver};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
-use futures::channel::mpsc::UnboundedSender;
+use futures::channel::mpsc::{UnboundedSender, unbounded, UnboundedReceiver};
 
 #[cfg(test)]
 pub mod config;
@@ -48,6 +48,14 @@ impl State {
     }
 }
 
+// Own addition
+#[derive(Copy, PartialEq, Clone, Debug)]
+enum RaftState {
+    Follower,
+    Candidate,
+    Leader,
+}
+
 // A single Raft peer.
 pub struct Raft {
     // RPC end points of all peers
@@ -56,10 +64,12 @@ pub struct Raft {
     persister: Box<dyn Persister>,
     // this peer's index into peers[]
     me: usize,
-    state: Arc<State>,
+    state: RaftState,
     // Your data here (2A, 2B, 2C).
     // Look at the paper's Figure 2 for a description of what
     // state a Raft server must maintain.
+
+    term: u64
 }
 
 impl Raft {
@@ -84,13 +94,15 @@ impl Raft {
             peers,
             persister,
             me,
-            state: Arc::default(),
+            state: RaftState::Follower,
+            term: 0
         };
 
         // initialize from state persisted before a crash
         rf.restore(&raft_state);
 
-        crate::your_code_here((rf, apply_ch))
+        // crate::your_code_here((rf, apply_ch))
+        rf
     }
 
     /// save Raft's persistent state to stable storage,
@@ -170,7 +182,7 @@ impl Raft {
         let mut buf = vec![];
         labcodec::encode(command, &mut buf).map_err(Error::Encode)?;
         // Your code here (2B).
-
+        
         if is_leader {
             Ok((index, term))
         } else {
@@ -191,6 +203,10 @@ impl Raft {
     fn snapshot(&mut self, index: u64, snapshot: &[u8]) {
         // Your code here (2D).
         crate::your_code_here((index, snapshot));
+    }
+
+    fn is_leader(&self) -> bool {
+        self.state == RaftState::Leader
     }
 }
 
@@ -227,13 +243,21 @@ impl Raft {
 #[derive(Clone)]
 pub struct Node {
     // Your code here.
+    raft: Arc<Mutex<Raft>>,
+
+    sender: UnboundedSender<ApplyMsg>,
 }
 
 impl Node {
     /// Create a new raft service.
     pub fn new(raft: Raft) -> Node {
         // Your code here.
-        crate::your_code_here(raft)
+        let (tx, rx): (UnboundedSender<ApplyMsg>, UnboundedReceiver<ApplyMsg>) = unbounded();
+
+        Node {
+            raft: Arc::new(Mutex::new(raft)),
+            sender: tx,
+        }
     }
 
     /// the service using Raft (e.g. a k/v server) wants to start
@@ -255,7 +279,10 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.start(command)
-        crate::your_code_here(command)
+        if !is_leader() {
+            return Error::NotLeader;
+        }
+        self.raft.start(command)
     }
 
     /// The current term of this peer.
@@ -263,7 +290,7 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.term
-        crate::your_code_here(())
+        self.raft.lock().unwrap().term
     }
 
     /// Whether this peer believes it is the leader.
@@ -271,7 +298,7 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.leader_id == self.id
-        crate::your_code_here(())
+        self.raft.lock().unwrap().is_leader()
     }
 
     /// The current state of this peer.
