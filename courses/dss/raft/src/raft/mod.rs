@@ -1,7 +1,10 @@
+use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
+use rand::{self, Rng};
+use std::collections::HashMap;
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
-
-use futures::channel::mpsc::{UnboundedSender, unbounded, UnboundedReceiver};
+use std::thread;
+use std::time::Duration;
 
 #[cfg(test)]
 pub mod config;
@@ -13,6 +16,9 @@ mod tests;
 use self::errors::*;
 use self::persister::*;
 use crate::proto::raftpb::*;
+
+const ElectionTimeout: u64 = 300;
+const SleepDuration: u64 = 30;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -56,6 +62,60 @@ enum RaftState {
     Leader,
 }
 
+fn gen_randomized_timeout() -> u64 {
+    let mut rng = rand::thread_rng();
+    rng.gen_range(0, ElectionTimeout)
+}
+
+struct Progresses {
+    votes: HashMap<u64, bool>,
+}
+
+impl Progresses {
+    fn new() -> Progresses {
+        Progresses {
+            votes: HashMap::new(),
+        }
+    }
+}
+
+struct RaftCore {
+    me: usize,
+
+    state: RaftState,
+    term: u64,
+
+    election_elapsed: Arc<Mutex<u64>>,
+    election_timeout: u64,
+    randomized_election_timeout: u64,
+
+    prs: Progresses,
+}
+
+impl RaftCore {
+    fn new() -> RaftCore {
+        unimplemented!()
+    }
+
+    fn check_compaign(&self) {
+        // sleep some ms below SleepDuration
+        let mut rng = rand::thread_rng();
+        loop {
+            let sleep_time = rng.gen_range(0, SleepDuration);
+            thread::sleep(Duration::from_millis(sleep_time));
+            let mut election_elapsed = self.election_elapsed.lock().unwrap();
+            *election_elapsed += sleep_time;
+    
+            if *election_elapsed > self.election_timeout + self.randomized_election_timeout {}
+        }
+    }
+
+    fn become_candidate(&mut self, term: u64) {
+        self.state = RaftState::Candidate;
+        self.term = term;
+    }
+}
+
 // A single Raft peer.
 pub struct Raft {
     // RPC end points of all peers
@@ -63,14 +123,15 @@ pub struct Raft {
     // Object to hold this peer's persisted state
     persister: Box<dyn Persister>,
     // this peer's index into peers[]
-    me: usize,
-    state: RaftState,
+    
+    
     // Your data here (2A, 2B, 2C).
     // Look at the paper's Figure 2 for a description of what
     // state a Raft server must maintain.
-
-    term: u64
+    raft_core: Arc<RaftCore>,
 }
+
+
 
 impl Raft {
     /// the service or tester wants to create a Raft server. the ports
@@ -93,10 +154,13 @@ impl Raft {
         let mut rf = Raft {
             peers,
             persister,
-            me,
-            state: RaftState::Follower,
-            term: 0
+            raft_core: Arc::new(RaftCore::new()),
         };
+
+        let raft_core = rf.raft_core.clone();
+        let _ =thread::spawn(move || {
+            raft_core.check_compaign();
+        });
 
         // initialize from state persisted before a crash
         rf.restore(&raft_state);
@@ -104,6 +168,14 @@ impl Raft {
         // crate::your_code_here((rf, apply_ch))
         rf
     }
+
+    
+
+    
+
+    fn vote_for(&mut self, id: usize) {}
+
+    fn compaign(&self) {}
 
     /// save Raft's persistent state to stable storage,
     /// where it can later be retrieved after a crash and restart.
@@ -182,7 +254,7 @@ impl Raft {
         let mut buf = vec![];
         labcodec::encode(command, &mut buf).map_err(Error::Encode)?;
         // Your code here (2B).
-        
+
         if is_leader {
             Ok((index, term))
         } else {
@@ -206,7 +278,7 @@ impl Raft {
     }
 
     fn is_leader(&self) -> bool {
-        self.state == RaftState::Leader
+        self.raft_core.as_ref().state == RaftState::Leader
     }
 }
 
@@ -219,8 +291,6 @@ impl Raft {
         let _ = self.snapshot(0, &[]);
         let _ = self.send_request_vote(0, Default::default());
         self.persist();
-        let _ = &self.state;
-        let _ = &self.me;
         let _ = &self.persister;
         let _ = &self.peers;
     }
@@ -279,10 +349,10 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.start(command)
-        if !is_leader() {
-            return Error::NotLeader;
+        if !self.is_leader() {
+            return Ok((0, 0));
         }
-        self.raft.start(command)
+        self.raft.lock().unwrap().start(command)
     }
 
     /// The current term of this peer.
@@ -290,7 +360,7 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.term
-        self.raft.lock().unwrap().term
+        self.raft.lock().unwrap().raft_core.term
     }
 
     /// Whether this peer believes it is the leader.
