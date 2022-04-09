@@ -10,7 +10,8 @@ use futures::stream::StreamExt;
 use rand::Rng;
 
 use crate::proto::raftpb::*;
-use crate::raft;
+use crate::raft::raft;
+use crate::raft::node;
 use crate::raft::persister::*;
 
 pub const SNAPSHOT_INTERVAL: u64 = 10;
@@ -66,7 +67,7 @@ pub struct Config {
     pub net: labrpc::Network,
     n: usize,
     // use boxed slice to prohibit grow capacity.
-    pub rafts: Arc<Mutex<Box<[Option<raft::Node>]>>>,
+    pub rafts: Arc<Mutex<Box<[Option<node::Node>]>>>,
     // whether each server is on the net
     pub connected: Box<[bool]>,
     saved: Box<[Arc<SimplePersister>]>,
@@ -397,7 +398,7 @@ impl Config {
 
         let (tx, apply_ch) = unbounded();
         let rf = raft::Raft::new(clients, i, Box::new(self.saved[i].clone()), tx);
-        let node = raft::Node::new(rf);
+        let node = node::Node::new(rf);
         self.rafts.lock().unwrap()[i] = Some(node.clone());
 
         // listen to messages from Raft indicating newly committed messages.

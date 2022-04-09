@@ -1,3 +1,4 @@
+use crate::proto::raftpb::*;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
 use futures::lock::MutexGuard;
 use futures::select;
@@ -10,8 +11,6 @@ use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use crate::proto::raftpb::*;
-
 
 use super::errors::*;
 use super::raft::*;
@@ -146,10 +145,6 @@ impl Node {
     }
 }
 
-
-
-
-
 #[async_trait::async_trait]
 impl RaftService for Node {
     // example RequestVote RPC handler.
@@ -157,6 +152,6 @@ impl RaftService for Node {
     // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
     async fn request_vote(&self, args: RequestVoteArgs) -> labrpc::Result<RequestVoteReply> {
         // Your code here (2A, 2B).
-        unimplemented!()
+        Ok(self.raft.lock().unwrap().handle_vote_req(args))
     }
 }

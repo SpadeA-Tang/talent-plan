@@ -12,7 +12,7 @@ pub struct ProgressTracker {
 
 
 
-
+#[derive(PartialEq)]
 pub enum VoteResult {
     VotePending,
     VoteLost,
@@ -31,6 +31,7 @@ impl ProgressTracker {
         self.votes = HashMap::new();
     }
 
+    // The caller should check the term of the voter
     pub fn record_vote(&mut self, id: usize, grant: bool) {
         self.votes.insert(id, grant);
     }

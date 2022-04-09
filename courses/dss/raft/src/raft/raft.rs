@@ -1,3 +1,4 @@
+pub use crate::proto::raftpb::*;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
 use futures::lock::MutexGuard;
 use futures::select;
@@ -8,14 +9,13 @@ use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use crate::proto::raftpb::*;
 
-use super::progress::*;
-use super::persister::*;
 use super::errors::*;
+use super::persister::*;
+use super::progress::*;
 
-const ElectionTimeout: u64 = 300;
-const SleepDuration: u64 = 30;
+const ELECTION_TIMEOUT: u64 = 300;
+const SLEEP_DURATION: u64 = 30;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -73,14 +73,14 @@ pub enum RaftState {
 
 pub fn gen_randomized_timeout() -> u64 {
     let mut rng = rand::thread_rng();
-    rng.gen_range(0, ElectionTimeout)
+    rng.gen_range(0, ELECTION_TIMEOUT)
 }
 
 pub fn may_compaign(rf: Arc<Mutex<Raft>>) {
-    // sleep some ms below SleepDuration
+    // sleep some ms below SLEEP_DURATION
     let mut rng = rand::thread_rng();
     loop {
-        let sleep_time = rng.gen_range(0, SleepDuration);
+        let sleep_time = rng.gen_range(0, SLEEP_DURATION);
         thread::sleep(Duration::from_millis(sleep_time));
 
         let mut rf_locked = rf.lock().unwrap();
@@ -88,11 +88,14 @@ pub fn may_compaign(rf: Arc<Mutex<Raft>>) {
         if rf_locked.election_elapsed
             < rf_locked.randomized_election_timeout + rf_locked.election_timeout
         {
+            // Not timeout
             continue;
         }
+        rf_locked.randomized_election_timeout = gen_randomized_timeout();
+
         let (mut tx_timeout, mut rx_timeout): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
             unbounded();
-        
+
         let term = rf_locked.term;
         rf_locked.become_candidate(term);
         let compaign_duration = rf_locked.election_timeout + rf_locked.randomized_election_timeout;
@@ -100,51 +103,49 @@ pub fn may_compaign(rf: Arc<Mutex<Raft>>) {
         // 超时提醒
         let _ = thread::spawn(move || {
             thread::sleep(Duration::from_millis(compaign_duration));
-            tx_timeout.send(true);
+            let _ = futures::executor::block_on(async { tx_timeout.send(true).await });
         });
 
         let vote_request = RequestVoteArgs {
             id: rf_locked.me as u64,
             term: rf_locked.term as u64,
-            index: 0,
+            log_index: 0, // todo: works
+            log_term: rf_locked.term,
         };
-        let mut vote_reponses = Vec::new();
 
+
+        let (tx_vote, mut rx_vote): (UnboundedSender<RequestVoteReply>, UnboundedReceiver<RequestVoteReply>) = unbounded();
         for &id in &rf_locked.peer_ids {
             if id == rf_locked.me {
                 continue;
             }
-            let client = rf_locked.peers[id].clone();
             let req = vote_request.clone();
-            let resp = async move { client.request_vote(&req).await };
-            vote_reponses.push(resp);
+            rf_locked.send_request_vote(id, req, tx_vote.clone());
         }
         drop(rf_locked);
-
-        let (tx_vote, mut rx_vote): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
-            unbounded();
-        for f in vote_reponses {
-            let rf_clone = rf.clone();
-            let mut tx_vote_clone = tx_vote.clone();
-            thread::spawn(move || {
-                if let Ok(res) = futures::executor::block_on(f) {
-                    let mut rf_locked = rf_clone.lock().unwrap();
-                    rf_locked.prs.record_vote(res.id as usize, res.grant);
-                } else {
-                    tx_vote_clone.send(false);
-                }
-            });
-        }
 
         futures::executor::block_on(async {
             loop {
                 select! {
                     _ = rx_timeout.next() => {
+                        let mut rf_locked = rf.lock().unwrap();
+                        let term = rf_locked.term;
+                        rf_locked.become_follower(term);
                         break;
                     }
-                    resp = rx_vote.next() => {
+                    vote_resp = rx_vote.next() => {
+                        if let Some(vote_resp) = vote_resp
                         {
-                            let rf_locked = rf.lock().unwrap();
+                            let mut rf_locked = rf.lock().unwrap();
+                            let vote_resp = rf_locked.poll(vote_resp);
+                            if vote_resp == VoteResult::VoteWin {
+                                rf_locked.become_leader();
+                                break;
+                            } else if vote_resp == VoteResult::VoteLost {
+                                let term = rf_locked.term;
+                                rf_locked.become_follower(term);
+                                break;
+                            }
                         }
                     }
                 };
@@ -170,6 +171,7 @@ pub struct Raft {
     state: RaftState,
     term: u64,
     vote: Option<usize>,
+    index: u64, // todo: to be removed
 
     leader: Option<u64>,
 
@@ -178,7 +180,6 @@ pub struct Raft {
     randomized_election_timeout: u64,
 
     prs: ProgressTracker,
-
     // msgs: Vec<Msg>,
 }
 
@@ -211,11 +212,12 @@ impl Raft {
             peer_ids,
             state: RaftState::Follower,
             term: 0,
+            index: 0,
             vote: None,
             leader: None,
             election_elapsed: 0,
             randomized_election_timeout: gen_randomized_timeout(),
-            election_timeout: ElectionTimeout,
+            election_timeout: ELECTION_TIMEOUT,
 
             prs: ProgressTracker::new(),
         };
@@ -231,27 +233,74 @@ impl Raft {
         self.state = RaftState::Candidate;
         self.term = term + 1;
         self.leader = None;
-        self.vote = Some(self.me)
+        self.vote = Some(self.me);
+        self.prs.record_vote(self.me, true);
+        println!("[{}] becomes candidate at term {}", self.me, self.term);
+    }
+
+    fn become_leader(&mut self) {
+        self.election_elapsed = 0;
+        self.state = RaftState::Leader;
+        println!("[{}] becomes leader at term {}", self.me, self.term);
+    }
+
+    fn become_follower(&mut self, term: u64) {
+        self.state = RaftState::Follower;
+        self.term = term;
+        self.election_elapsed = 0;
+        self.prs.reset_vote_record();
+        println!("[{}] becomes follower at term {}", self.me, term);
     }
 
     pub fn get_term(&self) -> u64 {
         self.term
     }
 
-    fn propose<M>(&self, command: &M)
-    where
-        M: labcodec::Message,
-    {
-    }
-
-    fn poll(&mut self, id: usize, grant: bool) -> VoteResult {
-        self.prs.record_vote(id, grant);
+    fn poll(&mut self, resp: RequestVoteReply) -> VoteResult {
+        if resp.term == self.term {
+            println!(
+                "[{}] received vote from {} at term {}",
+                self.me, resp.id, self.term
+            );
+            self.prs.record_vote(resp.id as usize, resp.grant);
+        }
         self.prs.tally_vote()
     }
 
-    fn win_compaign(&self) {}
+    pub fn handle_vote_req(&mut self, req: RequestVoteArgs) -> RequestVoteReply {
+        if (req.term > self.term && self.log_up_to_date(req.log_index, req.log_term))
+            || (self.term == req.term && self.vote == Some(req.id as usize))
+        {
+            self.become_follower(req.term);
+            println!(
+                "[{}] grant vote for {} at term {}",
+                self.me, req.id, self.term
+            );
+            RequestVoteReply {
+                grant: true,
+                id: self.me as u64,
+                term: req.term,
+            }
+        } else {
+            println!(
+                "[{}] reject vote for {} at term {}",
+                self.me, req.id, self.term
+            );
+            RequestVoteReply {
+                grant: false,
+                id: self.me as u64,
+                term: self.term,
+            }
+        }
+    }
 
-    fn send(&self, msg: Msg) {}
+    fn log_up_to_date(&self, term: u64, index: u64) -> bool {
+        if term > self.term || (term == self.term && index >= self.index) {
+            true
+        } else {
+            false
+        }
+    }
 
     // fn request_vote(&self, tx: UnboundedSender<bool>, id: usize, vote_request: &RequestVoteArgs) {
     //     if let Ok(res) =
@@ -309,11 +358,12 @@ impl Raft {
     /// is no need to implement your own timeouts around this method.
     ///
     /// look at the comments in ../labrpc/src/lib.rs for more details.
-    fn send_request_vote(
+    pub fn send_request_vote(
         &self,
         server: usize,
         args: RequestVoteArgs,
-    ) -> Receiver<Result<RequestVoteReply>> {
+        mut sender: UnboundedSender<RequestVoteReply>
+    ) {
         // Your code here if you want the rpc becomes async.
         // Example:
         // ```
@@ -326,8 +376,16 @@ impl Raft {
         // });
         // rx
         // ```
-        let (tx, rx) = sync_channel::<Result<RequestVoteReply>>(1);
-        crate::your_code_here((server, args, tx, rx))
+        let peer = &self.peers[server];
+        let peer_clone = peer.clone();
+        peer.spawn(
+            async move {
+                let res = peer_clone.request_vote(&args).await.map_err(Error::Rpc);
+                if let Ok(res) = res {
+                    let _ =sender.send(res).await;
+                }
+            }
+        );
     }
 
     pub fn start<M>(&self, command: &M) -> Result<(u64, u64)>
@@ -375,7 +433,6 @@ impl Raft {
         let _ = self.start(&0);
         let _ = self.cond_install_snapshot(0, 0, &[]);
         let _ = self.snapshot(0, &[]);
-        let _ = self.send_request_vote(0, Default::default());
         self.persist();
         let _ = &self.persister;
         let _ = &self.peers;
