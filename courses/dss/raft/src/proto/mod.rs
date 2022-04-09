@@ -7,6 +7,7 @@ pub mod raftpb {
 
             // Your code here if more rpc desired.
             // rpc xxx(yyy) returns (zzz)
+            rpc heartbeat(HeartbeatArgs) returns (HeartbeatReply);
         }
     }
     pub use self::raft::{

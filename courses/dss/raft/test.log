@@ -1,62 +1,19 @@
-[0] becomes candidate at term 1
+[1] becomes candidate at term 1
 [2] becomes follower at term 1
-[2] grant vote for 0 at term 1
-[1] becomes follower at term 1
-[1] grant vote for 0 at term 1
-[0] received vote from 2 at term 1
-[0] received vote from 1 at term 1
-[0] becomes leader at term 1
-[0] becomes candidate at term 2
-[1] reject vote for 0 at term 1
-[2] reject vote for 0 at term 1
-[0] becomes leader at term 2
-[2] becomes candidate at term 2
-[1] reject vote for 2 at term 1
-[0] reject vote for 2 at term 2
-[2] becomes leader at term 2
-[2] received vote from 0 at term 2
+[2] grant vote for 1 at term 1
+[0] becomes follower at term 1
+[0] grant vote for 1 at term 1
+[1] received vote from 2 at term 1
+[1] becomes leader at term 1
 [1] becomes candidate at term 2
-[2] reject vote for 1 at term 2
-[0] reject vote for 1 at term 2
-[1] received vote from 2 at term 2
-[1] received vote from 0 at term 2
+[2] reject vote for 1 at term 1
+[0] reject vote for 1 at term 1
 [1] becomes leader at term 2
-[2] becomes candidate at term 3
-[1] reject vote for 2 at term 2
-[0] reject vote for 2 at term 2
-[2] becomes leader at term 3
-[0] becomes candidate at term 3
-[1] reject vote for 0 at term 2
-[2] reject vote for 0 at term 3
-[0] becomes leader at term 3
-[0] received vote from 2 at term 3
 [1] becomes candidate at term 3
-[2] reject vote for 1 at term 3
-[0] reject vote for 1 at term 3
-[1] received vote from 2 at term 3
-[1] received vote from 0 at term 3
+[0] reject vote for 1 at term 1
+[2] reject vote for 1 at term 1
 [1] becomes leader at term 3
-[2] becomes candidate at term 4
-[0] reject vote for 2 at term 3
-[1] reject vote for 2 at term 3
-[2] becomes leader at term 4
-[0] becomes candidate at term 4
-[1] reject vote for 0 at term 3
-[2] reject vote for 0 at term 4
-[0] becomes leader at term 4
-[0] received vote from 2 at term 4
 [1] becomes candidate at term 4
-[0] reject vote for 1 at term 4
-[2] reject vote for 1 at term 4
-[1] received vote from 0 at term 4
-[1] received vote from 2 at term 4
+[2] reject vote for 1 at term 1
+[0] reject vote for 1 at term 1
 [1] becomes leader at term 4
-[2] becomes candidate at term 5
-[0] reject vote for 2 at term 4
-[1] reject vote for 2 at term 4
-[2] becomes leader at term 5
-[0] becomes candidate at term 5
-[1] reject vote for 0 at term 4
-[2] reject vote for 0 at term 5
-[0] becomes leader at term 5
-[0] received vote from 2 at term 5

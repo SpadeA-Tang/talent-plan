@@ -50,7 +50,7 @@ impl Node {
 
         let rf2 = node.raft.clone();
         thread::spawn(move || {
-            may_compaign(rf2);
+            background_worker(rf2);
         });
 
         node
@@ -153,5 +153,10 @@ impl RaftService for Node {
     async fn request_vote(&self, args: RequestVoteArgs) -> labrpc::Result<RequestVoteReply> {
         // Your code here (2A, 2B).
         Ok(self.raft.lock().unwrap().handle_vote_req(args))
+    }
+
+    async fn heartbeat(&self, args: HeartbeatArgs) -> labrpc::Result<HeartbeatReply> {
+        self.raft.lock().unwrap().handle_heartbeat(args.id as usize, args.term);
+        Ok(HeartbeatReply {})
     }
 }

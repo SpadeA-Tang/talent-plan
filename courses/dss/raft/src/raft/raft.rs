@@ -4,6 +4,7 @@ use futures::lock::MutexGuard;
 use futures::select;
 use futures::SinkExt;
 use futures::StreamExt;
+use prost::Message;
 use rand::{self, Rng};
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
@@ -16,6 +17,8 @@ use super::progress::*;
 
 const ELECTION_TIMEOUT: u64 = 300;
 const SLEEP_DURATION: u64 = 30;
+
+const PRINT_ELECTION: bool = true;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -76,7 +79,7 @@ pub fn gen_randomized_timeout() -> u64 {
     rng.gen_range(0, ELECTION_TIMEOUT)
 }
 
-pub fn may_compaign(rf: Arc<Mutex<Raft>>) {
+pub fn background_worker(rf: Arc<Mutex<Raft>>) {
     // sleep some ms below SLEEP_DURATION
     let mut rng = rand::thread_rng();
     loop {
@@ -89,6 +92,9 @@ pub fn may_compaign(rf: Arc<Mutex<Raft>>) {
             < rf_locked.randomized_election_timeout + rf_locked.election_timeout
         {
             // Not timeout
+            if rf_locked.state == RaftState::Leader {
+                rf_locked.bcast_heatbeat();
+            }
             continue;
         }
         rf_locked.randomized_election_timeout = gen_randomized_timeout();
@@ -113,8 +119,10 @@ pub fn may_compaign(rf: Arc<Mutex<Raft>>) {
             log_term: rf_locked.term,
         };
 
-
-        let (tx_vote, mut rx_vote): (UnboundedSender<RequestVoteReply>, UnboundedReceiver<RequestVoteReply>) = unbounded();
+        let (tx_vote, mut rx_vote): (
+            UnboundedSender<RequestVoteReply>,
+            UnboundedReceiver<RequestVoteReply>,
+        ) = unbounded();
         for &id in &rf_locked.peer_ids {
             if id == rf_locked.me {
                 continue;
@@ -173,7 +181,7 @@ pub struct Raft {
     vote: Option<usize>,
     index: u64, // todo: to be removed
 
-    leader: Option<u64>,
+    leader: Option<usize>,
 
     election_elapsed: u64,
     election_timeout: u64,
@@ -229,19 +237,53 @@ impl Raft {
         rf
     }
 
+    // todo : handle commit index
+    pub fn handle_heartbeat(&mut self, id: usize, term: u64) {
+        if term >= self.term {
+            self.leader = Some(id);
+            self.election_elapsed = 0;
+        }
+    }
+
+    pub fn bcast_heatbeat(&mut self) {
+        self.election_elapsed = 0;
+        let arg = HeartbeatArgs {
+            id: self.me as u64,
+            term: self.term,
+        };
+        for &id in &self.peer_ids {
+            if id == self.me {
+                continue;
+            }
+            let peer = &self.peers[id];
+            let peer_clone = peer.clone();
+            let arg_clone = arg.clone();
+            peer.spawn(async move {
+                // todo: now, we don't need the result of hb
+                let _ = peer_clone.heartbeat(&arg_clone).await.map_err(Error::Rpc);
+            });
+        }
+    }
+
     fn become_candidate(&mut self, term: u64) {
         self.state = RaftState::Candidate;
         self.term = term + 1;
         self.leader = None;
         self.vote = Some(self.me);
         self.prs.record_vote(self.me, true);
-        println!("[{}] becomes candidate at term {}", self.me, self.term);
+
+        if PRINT_ELECTION {
+            println!("[{}] becomes candidate at term {}", self.me, self.term);
+        }
     }
 
     fn become_leader(&mut self) {
         self.election_elapsed = 0;
         self.state = RaftState::Leader;
-        println!("[{}] becomes leader at term {}", self.me, self.term);
+
+        if PRINT_ELECTION {
+            println!("[{}] becomes leader at term {}", self.me, self.term);
+        }
     }
 
     fn become_follower(&mut self, term: u64) {
@@ -249,7 +291,10 @@ impl Raft {
         self.term = term;
         self.election_elapsed = 0;
         self.prs.reset_vote_record();
-        println!("[{}] becomes follower at term {}", self.me, term);
+
+        if PRINT_ELECTION {
+            println!("[{}] becomes follower at term {}", self.me, term);
+        }
     }
 
     pub fn get_term(&self) -> u64 {
@@ -258,34 +303,41 @@ impl Raft {
 
     fn poll(&mut self, resp: RequestVoteReply) -> VoteResult {
         if resp.term == self.term {
-            println!(
-                "[{}] received vote from {} at term {}",
-                self.me, resp.id, self.term
-            );
+            if PRINT_ELECTION {
+                println!(
+                    "[{}] received vote from {} at term {}",
+                    self.me, resp.id, self.term
+                );
+            }
             self.prs.record_vote(resp.id as usize, resp.grant);
         }
         self.prs.tally_vote()
     }
 
     pub fn handle_vote_req(&mut self, req: RequestVoteArgs) -> RequestVoteReply {
-        if (req.term > self.term && self.log_up_to_date(req.log_index, req.log_term))
+        if (req.term > self.term && self.log_up_to_date(req.log_term, req.log_index))
             || (self.term == req.term && self.vote == Some(req.id as usize))
         {
+            if PRINT_ELECTION {
+                println!(
+                    "[{}] grant vote for {} at term {}",
+                    self.me, req.id, self.term
+                );
+            }
             self.become_follower(req.term);
-            println!(
-                "[{}] grant vote for {} at term {}",
-                self.me, req.id, self.term
-            );
+
             RequestVoteReply {
                 grant: true,
                 id: self.me as u64,
                 term: req.term,
             }
         } else {
-            println!(
-                "[{}] reject vote for {} at term {}",
-                self.me, req.id, self.term
-            );
+            if PRINT_ELECTION {
+                println!(
+                    "[{}] reject vote for {} at term {}",
+                    self.me, req.id, self.term
+                );
+            }
             RequestVoteReply {
                 grant: false,
                 id: self.me as u64,
@@ -362,7 +414,7 @@ impl Raft {
         &self,
         server: usize,
         args: RequestVoteArgs,
-        mut sender: UnboundedSender<RequestVoteReply>
+        mut sender: UnboundedSender<RequestVoteReply>,
     ) {
         // Your code here if you want the rpc becomes async.
         // Example:
@@ -378,14 +430,12 @@ impl Raft {
         // ```
         let peer = &self.peers[server];
         let peer_clone = peer.clone();
-        peer.spawn(
-            async move {
-                let res = peer_clone.request_vote(&args).await.map_err(Error::Rpc);
-                if let Ok(res) = res {
-                    let _ =sender.send(res).await;
-                }
+        peer.spawn(async move {
+            let res = peer_clone.request_vote(&args).await.map_err(Error::Rpc);
+            if let Ok(res) = res {
+                let _ = sender.send(res).await;
             }
-        );
+        });
     }
 
     pub fn start<M>(&self, command: &M) -> Result<(u64, u64)>
