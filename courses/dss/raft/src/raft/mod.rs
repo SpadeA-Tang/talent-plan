@@ -1,6 +1,11 @@
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
+use futures::lock::MutexGuard;
+use futures::select;
+use futures::SinkExt;
+use futures::StreamExt;
 use rand::{self, Rng};
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -10,12 +15,17 @@ use std::time::Duration;
 pub mod config;
 pub mod errors;
 pub mod persister;
+pub mod progress;
+pub mod qurroum;
 #[cfg(test)]
 mod tests;
 
 use self::errors::*;
 use self::persister::*;
 use crate::proto::raftpb::*;
+
+use progress::*;
+use qurroum::*;
 
 const ElectionTimeout: u64 = 300;
 const SleepDuration: u64 = 30;
@@ -34,6 +44,18 @@ pub enum ApplyMsg {
         term: u64,
         index: u64,
     },
+}
+
+enum MsgType {
+    RequestVote,
+    AppendLog,
+}
+
+struct Msg {
+    msg_type: MsgType,
+
+    term: u64,
+    index: u64,
 }
 
 /// State of a raft peer.
@@ -67,52 +89,76 @@ fn gen_randomized_timeout() -> u64 {
     rng.gen_range(0, ElectionTimeout)
 }
 
-struct Progresses {
-    votes: HashMap<u64, bool>,
-}
+fn may_compaign(rf: Arc<Mutex<Raft>>) {
+    // sleep some ms below SleepDuration
+    let mut rng = rand::thread_rng();
+    loop {
+        let sleep_time = rng.gen_range(0, SleepDuration);
+        thread::sleep(Duration::from_millis(sleep_time));
 
-impl Progresses {
-    fn new() -> Progresses {
-        Progresses {
-            votes: HashMap::new(),
+        let mut rf_locked = rf.lock().unwrap();
+        rf_locked.election_elapsed += sleep_time;
+        if rf_locked.election_elapsed
+            < rf_locked.randomized_election_timeout + rf_locked.election_timeout
+        {
+            continue;
         }
-    }
-}
+        let (mut tx_timeout, mut rx_timeout): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
+            unbounded();
+        
+        let term = rf_locked.term;
+        rf_locked.become_candidate(term);
+        let compaign_duration = rf_locked.election_timeout + rf_locked.randomized_election_timeout;
 
-struct RaftCore {
-    me: usize,
+        // 超时提醒
+        let _ = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(compaign_duration));
+            tx_timeout.send(true);
+        });
 
-    state: RaftState,
-    term: u64,
+        let vote_request = RequestVoteArgs {};
+        let mut vote_reponses = Vec::new();
 
-    election_elapsed: Arc<Mutex<u64>>,
-    election_timeout: u64,
-    randomized_election_timeout: u64,
-
-    prs: Progresses,
-}
-
-impl RaftCore {
-    fn new() -> RaftCore {
-        unimplemented!()
-    }
-
-    fn check_compaign(&self) {
-        // sleep some ms below SleepDuration
-        let mut rng = rand::thread_rng();
-        loop {
-            let sleep_time = rng.gen_range(0, SleepDuration);
-            thread::sleep(Duration::from_millis(sleep_time));
-            let mut election_elapsed = self.election_elapsed.lock().unwrap();
-            *election_elapsed += sleep_time;
-    
-            if *election_elapsed > self.election_timeout + self.randomized_election_timeout {}
+        for &id in &rf_locked.peer_ids {
+            if id == rf_locked.me {
+                continue;
+            }
+            let client = rf_locked.peers[id].clone();
+            let req = vote_request.clone();
+            let resp = async move { client.request_vote(&req).await };
+            vote_reponses.push(resp);
         }
-    }
+        drop(rf_locked);
 
-    fn become_candidate(&mut self, term: u64) {
-        self.state = RaftState::Candidate;
-        self.term = term;
+        let (tx_vote, mut rx_vote): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
+            unbounded();
+        for f in vote_reponses {
+            let rf_clone = rf.clone();
+            let mut tx_vote_clone = tx_vote.clone();
+            thread::spawn(move || {
+                if let Ok(res) = futures::executor::block_on(f) {
+                    let mut rf_locked = rf_clone.lock().unwrap();
+                    rf_locked.prs.record_vote(res.id as usize, res.grant);
+                } else {
+                    tx_vote_clone.send(false);
+                }
+            });
+        }
+
+        futures::executor::block_on(async {
+            loop {
+                select! {
+                    _ = rx_timeout.next() => {
+                        break;
+                    }
+                    resp = rx_vote.next() => {
+                        {
+                            let rf_locked = rf.lock().unwrap();
+                        }
+                    }
+                };
+            }
+        })
     }
 }
 
@@ -123,15 +169,27 @@ pub struct Raft {
     // Object to hold this peer's persisted state
     persister: Box<dyn Persister>,
     // this peer's index into peers[]
-    
-    
+
     // Your data here (2A, 2B, 2C).
     // Look at the paper's Figure 2 for a description of what
     // state a Raft server must maintain.
-    raft_core: Arc<RaftCore>,
+    me: usize,
+    peer_ids: Vec<usize>,
+
+    state: RaftState,
+    term: u64,
+    vote: Option<usize>,
+
+    leader: Option<u64>,
+
+    election_elapsed: u64,
+    election_timeout: u64,
+    randomized_election_timeout: u64,
+
+    prs: ProgressTracker,
+
+    // msgs: Vec<Msg>,
 }
-
-
 
 impl Raft {
     /// the service or tester wants to create a Raft server. the ports
@@ -150,17 +208,26 @@ impl Raft {
     ) -> Raft {
         let raft_state = persister.raft_state();
 
+        let mut peer_ids = Vec::new();
+        for i in 0..peers.len() {
+            peer_ids.push(i);
+        }
         // Your initialization code here (2A, 2B, 2C).
         let mut rf = Raft {
             peers,
             persister,
-            raft_core: Arc::new(RaftCore::new()),
-        };
+            me,
+            peer_ids,
+            state: RaftState::Follower,
+            term: 0,
+            vote: None,
+            leader: None,
+            election_elapsed: 0,
+            randomized_election_timeout: gen_randomized_timeout(),
+            election_timeout: ElectionTimeout,
 
-        let raft_core = rf.raft_core.clone();
-        let _ =thread::spawn(move || {
-            raft_core.check_compaign();
-        });
+            prs: ProgressTracker::new(),
+        };
 
         // initialize from state persisted before a crash
         rf.restore(&raft_state);
@@ -169,13 +236,37 @@ impl Raft {
         rf
     }
 
-    
+    fn become_candidate(&mut self, term: u64) {
+        self.state = RaftState::Candidate;
+        self.term = term + 1;
+        self.leader = None;
+        self.vote = Some(self.me)
+    }
 
-    
+    fn propose<M>(&self, command: &M)
+    where
+        M: labcodec::Message,
+    {
+    }
 
-    fn vote_for(&mut self, id: usize) {}
+    fn poll(&mut self, id: usize, grant: bool) -> VoteResult {
+        self.prs.record_vote(id, grant);
+        self.prs.tally_vote()
+    }
 
-    fn compaign(&self) {}
+    fn win_compaign(&self) {}
+
+    fn send(&self, msg: Msg) {}
+
+    // fn request_vote(&self, tx: UnboundedSender<bool>, id: usize, vote_request: &RequestVoteArgs) {
+    //     if let Ok(res) =
+    //         futures::executor::block_on(async { self.peers[id].request_vote(&vote_request).await })
+    //     {
+    //         self.prs.record_vote(id, res.grant);
+    //     } else {
+    //         tx.send(false);
+    //     }
+    // }
 
     /// save Raft's persistent state to stable storage,
     /// where it can later be retrieved after a crash and restart.
@@ -278,7 +369,7 @@ impl Raft {
     }
 
     fn is_leader(&self) -> bool {
-        self.raft_core.as_ref().state == RaftState::Leader
+        self.state == RaftState::Leader
     }
 }
 
@@ -324,10 +415,17 @@ impl Node {
         // Your code here.
         let (tx, rx): (UnboundedSender<ApplyMsg>, UnboundedReceiver<ApplyMsg>) = unbounded();
 
-        Node {
+        let node = Node {
             raft: Arc::new(Mutex::new(raft)),
             sender: tx,
-        }
+        };
+
+        let rf2 = node.raft.clone();
+        thread::spawn(move || {
+            may_compaign(rf2);
+        });
+
+        node
     }
 
     /// the service using Raft (e.g. a k/v server) wants to start
@@ -360,7 +458,7 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.term
-        self.raft.lock().unwrap().raft_core.term
+        self.raft.lock().unwrap().term
     }
 
     /// Whether this peer believes it is the leader.
