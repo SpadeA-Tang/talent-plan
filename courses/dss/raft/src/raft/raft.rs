@@ -15,7 +15,8 @@ use super::errors::*;
 use super::persister::*;
 use super::progress::*;
 
-const ELECTION_TIMEOUT: u64 = 300;
+const ELECTION_TIMEOUT: u64 = 500;
+const HEARTBEAT_TIMEOUT: u64 = 100;
 const SLEEP_DURATION: u64 = 30;
 
 const PRINT_ELECTION: bool = true;
@@ -88,11 +89,14 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
 
         let mut rf_locked = rf.lock().unwrap();
         rf_locked.election_elapsed += sleep_time;
+        rf_locked.heartbeat_elapsed += sleep_time;
         if rf_locked.election_elapsed
             < rf_locked.randomized_election_timeout + rf_locked.election_timeout
         {
             // Not timeout
-            if rf_locked.state == RaftState::Leader {
+            if rf_locked.state == RaftState::Leader
+                && rf_locked.heartbeat_elapsed > rf_locked.heatbeat_timeout
+            {
                 rf_locked.bcast_heatbeat();
             }
             continue;
@@ -138,7 +142,7 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                     _ = rx_timeout.next() => {
                         let mut rf_locked = rf.lock().unwrap();
                         let term = rf_locked.term;
-                        rf_locked.become_follower(term);
+                        rf_locked.become_follower(term, None);
                         break;
                     }
                     vote_resp = rx_vote.next() => {
@@ -151,7 +155,7 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                                 break;
                             } else if vote_resp == VoteResult::VoteLost {
                                 let term = rf_locked.term;
-                                rf_locked.become_follower(term);
+                                rf_locked.become_follower(term, None);
                                 break;
                             }
                         }
@@ -184,6 +188,8 @@ pub struct Raft {
     leader: Option<usize>,
 
     election_elapsed: u64,
+    heartbeat_elapsed: u64,
+    heatbeat_timeout: u64,
     election_timeout: u64,
     randomized_election_timeout: u64,
 
@@ -224,8 +230,10 @@ impl Raft {
             vote: None,
             leader: None,
             election_elapsed: 0,
+            heartbeat_elapsed: 0,
             randomized_election_timeout: gen_randomized_timeout(),
             election_timeout: ELECTION_TIMEOUT,
+            heatbeat_timeout: HEARTBEAT_TIMEOUT,
 
             prs: ProgressTracker::new(),
         };
@@ -240,13 +248,13 @@ impl Raft {
     // todo : handle commit index
     pub fn handle_heartbeat(&mut self, id: usize, term: u64) {
         if term >= self.term {
-            self.leader = Some(id);
-            self.election_elapsed = 0;
+            self.become_follower(term, Some(id));
         }
     }
 
     pub fn bcast_heatbeat(&mut self) {
         self.election_elapsed = 0;
+        self.heartbeat_elapsed = 0;
         let arg = HeartbeatArgs {
             id: self.me as u64,
             term: self.term,
@@ -286,9 +294,10 @@ impl Raft {
         }
     }
 
-    fn become_follower(&mut self, term: u64) {
+    fn become_follower(&mut self, term: u64, leader: Option<usize>) {
         self.state = RaftState::Follower;
         self.term = term;
+        self.leader = leader;
         self.election_elapsed = 0;
         self.prs.reset_vote_record();
 
@@ -324,7 +333,7 @@ impl Raft {
                     self.me, req.id, self.term
                 );
             }
-            self.become_follower(req.term);
+            self.become_follower(req.term, None);
 
             RequestVoteReply {
                 grant: true,

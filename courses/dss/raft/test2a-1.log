@@ -1,0 +1,31 @@
+test_reelection_2a
+
+按照下面的log
+第一个leader为node2，竞选成功后将其disconnect
+这个时候node0会被选为leader，然后可以connect node2
+然后disconnect node0和node1
+这个时候检查node2是不是leader
+
+该测试失败的原因在于在处理heartbeat的时候没有将state置为follower
+但是很多时候，还是会成功，原因在于 node 2发起compaign时，会成为candidate
+
+[2] becomes candidate at term 1
+[0] grant vote for 2 at term 0
+[1] grant vote for 2 at term 0
+[0] becomes follower at term 1
+[1] becomes follower at term 1
+[2] received vote from 0 at term 1
+[2] becomes leader at term 1
+disconnect(2)
+[0] becomes candidate at term 2
+[1] grant vote for 0 at term 1
+[1] becomes follower at term 2
+[0] received vote from 1 at term 2
+[0] becomes leader at term 2
+connect(2)
+disconnect(0)
+disconnect(1)
+[1] becomes candidate at term 3
+[1] becomes follower at term 3
+thread 'raft::tests::test_reelection_2a' panicked at 'expected no leader, but 2 claims to be leader', raft\src\raft\config.rs:221:21
+stack backtrace:
