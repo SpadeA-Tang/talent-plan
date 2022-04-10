@@ -8,6 +8,8 @@ pub mod raftpb {
             // Your code here if more rpc desired.
             // rpc xxx(yyy) returns (zzz)
             rpc heartbeat(HeartbeatArgs) returns (HeartbeatReply);
+
+            rpc append_entries(AppendEntryArgs) returns (AppendEntryReply);
         }
     }
     pub use self::raft::{

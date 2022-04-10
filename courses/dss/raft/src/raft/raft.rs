@@ -1,12 +1,9 @@
 pub use crate::proto::raftpb::*;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
-use futures::lock::MutexGuard;
 use futures::select;
 use futures::SinkExt;
 use futures::StreamExt;
-use prost::Message;
 use rand::{self, Rng};
-use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -20,6 +17,7 @@ const HEARTBEAT_TIMEOUT: u64 = 100;
 const SLEEP_DURATION: u64 = 30;
 
 const PRINT_ELECTION: bool = true;
+const PRINT_APPEND: bool = true;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -35,18 +33,6 @@ pub enum ApplyMsg {
         term: u64,
         index: u64,
     },
-}
-
-enum MsgType {
-    RequestVote,
-    AppendLog,
-}
-
-struct Msg {
-    msg_type: MsgType,
-
-    term: u64,
-    index: u64,
 }
 
 /// State of a raft peer.
@@ -149,6 +135,7 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                         if let Some(vote_resp) = vote_resp
                         {
                             let mut rf_locked = rf.lock().unwrap();
+                            // 首先判断现在还是不是candidate
                             let vote_resp = rf_locked.poll(vote_resp);
                             if vote_resp == VoteResult::VoteWin {
                                 rf_locked.become_leader();
@@ -163,6 +150,31 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                 };
             }
         })
+    }
+}
+
+pub fn handle_append_resp(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<AppendEntryReply>) {
+    loop {
+        futures::executor::block_on(async {
+            while let Some(res) = rx.next().await {
+                let mut rf_locked = rf.lock().unwrap();
+                rf_locked.handle_append_resp(res);
+            }
+        })
+    }
+}
+
+use super::raftlog::*;
+
+pub struct Router<T> {
+    pub tx: UnboundedSender<T>,
+    pub rx: Option<UnboundedReceiver<T>>,
+}
+
+impl<T> Router<T> {
+    pub fn new() -> Router<T> {
+        let (tx, rx): (UnboundedSender<T>, UnboundedReceiver<T>) = unbounded();
+        Router { tx, rx: Some(rx) }
     }
 }
 
@@ -183,7 +195,6 @@ pub struct Raft {
     state: RaftState,
     term: u64,
     vote: Option<usize>,
-    index: u64, // todo: to be removed
 
     leader: Option<usize>,
 
@@ -194,10 +205,149 @@ pub struct Raft {
     randomized_election_timeout: u64,
 
     prs: ProgressTracker,
+
+    raft_log: RaftLog,
+    // vote_router: Router<RequestVoteReply>,
+    pub append_entries_router: Router<AppendEntryReply>,
     // msgs: Vec<Msg>,
+    apply_ch: UnboundedSender<ApplyMsg>,
 }
 
 impl Raft {
+    // First, I will implement naive rejection which means when leader discovers that the folower does not have a
+    // matched log entry, it just decrease the pr.next_index by 1.
+    pub fn handle_append_entry(&mut self, arg: AppendEntryArgs) -> AppendEntryReply {
+        if PRINT_APPEND {
+            if arg.entries.len() == 0 {
+                println!("");
+            }
+            println!(
+                "[{}] receive entries({} - {}) from [{}] with term {} and commit index {}",
+                self.me,
+                arg.entries[0].index,
+                arg.entries[arg.entries.len() - 1].index,
+                arg.id,
+                arg.term,
+                arg.commit_index
+            );
+        }
+
+        let mut reply = AppendEntryReply {
+            id: self.me as u64,
+            term: arg.term,
+            index: 0,
+            success: false,
+        };
+
+        // 1. reply false if arg.term < self.term
+        if arg.term < self.term {
+            reply.term = self.term;
+            return reply;
+        }
+
+        if self.state != RaftState::Follower {
+            self.become_follower(arg.term, Some(arg.id as usize));
+        }
+
+        // 2. Check whether there is a entry matching the leader's prev log entry
+        if !self
+            .raft_log
+            .match_term(arg.lastlog_index, arg.lastlog_term)
+        {
+            reply.index = self.raft_log.last_index();
+            return reply;
+        }
+
+        reply.success = true;
+        reply.index = arg.lastlog_index + arg.entries.len() as u64;
+
+        if arg.entries.len() == 0 {
+            return reply;
+        }
+
+        // 3. Find conflict entries
+        let conflict_index = self.raft_log.find_conflict_entry(&arg.entries);
+        assert!(conflict_index >= self.raft_log.commit_idx);
+
+        // conflict_index == 0 means that this follower already has all ents
+        if conflict_index != 0 {
+            if conflict_index <= self.raft_log.last_index() {
+                let real_index = self.raft_log.real_index(conflict_index);
+                self.raft_log.trunct(real_index as usize);
+            }
+
+            // todo: 保证这个是对的
+            let begin_index = (conflict_index - (arg.lastlog_index + 1)) as usize;
+
+            self.raft_log.append_entries(&arg.entries[begin_index..]);
+        }
+        if self.raft_log.commit(arg.commit_index) {
+            self.send_apply();
+        }
+
+        reply
+    }
+
+    pub fn handle_append_resp(&mut self, resp: AppendEntryReply) {
+        if self.state != RaftState::Leader {
+            return;
+        }
+
+        if resp.term > self.term {
+            self.become_follower(resp.term, None);
+            return;
+        }
+
+        if resp.success {
+            if self.prs.may_update(resp.id as usize, resp.index) {
+                self.may_commit_and_apply();
+            }
+        } else {
+            let mut pr = self.prs.progress_map.get_mut(&(resp.id as usize)).unwrap();
+            pr.next_index = std::cmp::min(pr.next_index - 1, resp.index);
+
+            let tx = self.append_entries_router.tx.clone();
+            self.send_append(resp.id as usize, tx);
+        }
+    }
+
+    fn may_commit_and_apply(&mut self) {
+        let index = self.prs.get_commit_index();
+
+        if self.raft_log.commit(index) {
+            if PRINT_APPEND {
+                println!(
+                    "[{}] update commit index to {} with ent {:?}",
+                    self.me,
+                    self.raft_log.commit_idx,
+                    self.raft_log.get_entry(self.raft_log.commit_idx)
+                );
+            }
+            self.send_apply();
+        }
+    }
+
+    fn send_apply(&mut self) {
+        let mut apply_msgs = Vec::new();
+        let mut sender = self.apply_ch.clone();
+
+        for index in (self.raft_log.apply_idx + 1)..=self.raft_log.commit_idx {
+            let ent = self.raft_log.get_entry(index);
+            let apply_msg = ApplyMsg::Command {
+                data: ent.data.clone(),
+                index,
+            };
+            apply_msgs.push(apply_msg);
+        }
+        self.raft_log.apply_idx = self.raft_log.commit_idx;
+        thread::spawn(move || {
+            // todo: Think about how to use send_all
+            for msg in apply_msgs {
+                futures::executor::block_on(async { sender.send(msg).await }).unwrap();
+            }
+        });
+    }
+
     /// the service or tester wants to create a Raft server. the ports
     /// of all the Raft servers (including this one) are in peers. this
     /// server's port is peers[me]. all the servers' peers arrays
@@ -218,6 +368,7 @@ impl Raft {
         for i in 0..peers.len() {
             peer_ids.push(i);
         }
+        let prs = ProgressTracker::new(&peer_ids);
         // Your initialization code here (2A, 2B, 2C).
         let mut rf = Raft {
             peers,
@@ -226,7 +377,6 @@ impl Raft {
             peer_ids,
             state: RaftState::Follower,
             term: 0,
-            index: 0,
             vote: None,
             leader: None,
             election_elapsed: 0,
@@ -235,7 +385,13 @@ impl Raft {
             election_timeout: ELECTION_TIMEOUT,
             heatbeat_timeout: HEARTBEAT_TIMEOUT,
 
-            prs: ProgressTracker::new(),
+            prs,
+
+            raft_log: RaftLog::new(),
+            // vote_router: Router::new(),
+            append_entries_router: Router::new(),
+
+            apply_ch,
         };
 
         // initialize from state persisted before a crash
@@ -246,9 +402,12 @@ impl Raft {
     }
 
     // todo : handle commit index
-    pub fn handle_heartbeat(&mut self, id: usize, term: u64) {
-        if term >= self.term {
-            self.become_follower(term, Some(id));
+    pub fn handle_heartbeat(&mut self, arg: HeartbeatArgs) {
+        if arg.term >= self.term {
+            self.become_follower(arg.term, Some(arg.id as usize));
+            if self.raft_log.commit(arg.commit_index) {
+                self.send_apply();
+            }
         }
     }
 
@@ -258,6 +417,7 @@ impl Raft {
         let arg = HeartbeatArgs {
             id: self.me as u64,
             term: self.term,
+            commit_index: self.raft_log.commit_idx,
         };
         for &id in &self.peer_ids {
             if id == self.me {
@@ -288,10 +448,32 @@ impl Raft {
     fn become_leader(&mut self) {
         self.election_elapsed = 0;
         self.state = RaftState::Leader;
+        self.prs.record_vote(self.me, true);
+
+        let me = self.me;
+        let last_index = self.raft_log.last_index();
+
+        // // todo: I have now removed no-op to match some tests. How to handle commit previous term's entry.
+        // self.raft_log.append(Entry {
+        //     term: self.term,
+        //     index: last_index + 1,
+        //     data: Vec::new(),
+        // });
+        // last_index += 1;
+
+        self.prs.reset_progress(|id: usize, pr: &mut Progress| {
+            pr.matched_index = 0;
+            pr.next_index = last_index + 1;
+            if id == me {
+                pr.matched_index = last_index;
+            };
+        });
 
         if PRINT_ELECTION {
             println!("[{}] becomes leader at term {}", self.me, self.term);
         }
+
+        // self.bcast_append();
     }
 
     fn become_follower(&mut self, term: u64, leader: Option<usize>) {
@@ -356,7 +538,7 @@ impl Raft {
     }
 
     fn log_up_to_date(&self, term: u64, index: u64) -> bool {
-        if term > self.term || (term == self.term && index >= self.index) {
+        if term > self.term || (term == self.term && index >= self.raft_log.last_index()) {
             true
         } else {
             false
@@ -447,21 +629,79 @@ impl Raft {
         });
     }
 
-    pub fn start<M>(&self, command: &M) -> Result<(u64, u64)>
+    pub fn start<M>(&mut self, command: &M) -> Result<(u64, u64)>
     where
         M: labcodec::Message,
     {
-        let index = 0;
-        let term = 0;
-        let is_leader = true;
         let mut buf = vec![];
         labcodec::encode(command, &mut buf).map_err(Error::Encode)?;
-        // Your code here (2B).
+        let term = self.term;
+        let next_log_index = self.raft_log.last_index() + 1;
+        let entry = Entry {
+            term,
+            index: next_log_index,
+            data: buf,
+        };
+        self.raft_log.append(entry);
 
-        if is_leader {
-            Ok((index, term))
-        } else {
-            Err(Error::NotLeader)
+        let pr = self.prs.progress_map.get_mut(&self.me).unwrap();
+        pr.matched_index = self.raft_log.last_index();
+
+        if PRINT_APPEND {
+            println!(
+                "[{}] start command of index {} and term {}",
+                self.me, next_log_index, term
+            );
+        }
+        self.bcast_append();
+
+        Ok((next_log_index, term))
+    }
+
+    fn bcast_append(&self) {
+        let tx = &self.append_entries_router.tx;
+        for &id in &self.peer_ids {
+            if id == self.me {
+                continue;
+            }
+            self.send_append(id, tx.clone());
+        }
+    }
+
+    fn send_append(&self, to: usize, mut sender: UnboundedSender<AppendEntryReply>) {
+        let peer = &self.peers[to];
+        let peer_clone = peer.clone();
+
+        let mut entries = Vec::new();
+        let pr = self.prs.progress_map.get(&to).unwrap();
+        for log_index in pr.next_index..=self.raft_log.last_index() {
+            entries.push(self.raft_log.get_entry(log_index).clone());
+        }
+
+        let arg = AppendEntryArgs {
+            id: self.me as u64,
+            term: self.term,
+            lastlog_index: pr.next_index - 1,
+            lastlog_term: self.raft_log.term(pr.next_index - 1),
+            commit_index: self.raft_log.commit_idx,
+            entries,
+        };
+
+        peer.spawn(async move {
+            let res = peer_clone.append_entries(&arg).await.map_err(Error::Rpc);
+            if let Ok(res) = res {
+                let _ = sender.send(res).await;
+            }
+        });
+
+        if PRINT_APPEND {
+            println!(
+                "[{}] send entries from {} to {} to peer {}",
+                self.me,
+                pr.next_index,
+                self.raft_log.last_index(),
+                to
+            );
         }
     }
 

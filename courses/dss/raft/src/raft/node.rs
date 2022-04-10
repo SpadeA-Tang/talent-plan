@@ -1,16 +1,7 @@
 use crate::proto::raftpb::*;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
-use futures::lock::MutexGuard;
-use futures::select;
-use futures::SinkExt;
-use futures::StreamExt;
-use rand::{self, Rng};
-use std::collections::HashMap;
-use std::hash::Hash;
-use std::sync::mpsc::{sync_channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
 
 use super::errors::*;
 use super::raft::*;
@@ -41,7 +32,7 @@ impl Node {
     /// Create a new raft service.
     pub fn new(raft: Raft) -> Node {
         // Your code here.
-        let (tx, rx): (UnboundedSender<ApplyMsg>, UnboundedReceiver<ApplyMsg>) = unbounded();
+        let (tx, _rx): (UnboundedSender<ApplyMsg>, UnboundedReceiver<ApplyMsg>) = unbounded();
 
         let node = Node {
             raft: Arc::new(Mutex::new(raft)),
@@ -49,8 +40,21 @@ impl Node {
         };
 
         let rf2 = node.raft.clone();
+        let rf3 = node.raft.clone();
         thread::spawn(move || {
             background_worker(rf2);
+        });
+
+        let rx2 = node
+            .raft
+            .lock()
+            .unwrap()
+            .append_entries_router
+            .rx
+            .take()
+            .unwrap();
+        thread::spawn(move || {
+            handle_append_resp(rf3, rx2);
         });
 
         node
@@ -75,10 +79,14 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.start(command)
-        if !self.is_leader() {
-            return Ok((0, 0));
+        let mut rf_locked = self.raft.lock().unwrap();
+        if !rf_locked.is_leader() {
+            return Err(Error::NotLeader);
         }
-        self.raft.lock().unwrap().start(command)
+
+        let (index, term) = rf_locked.start(command).unwrap();
+
+        Ok((index, term))
     }
 
     /// The current term of this peer.
@@ -156,7 +164,14 @@ impl RaftService for Node {
     }
 
     async fn heartbeat(&self, args: HeartbeatArgs) -> labrpc::Result<HeartbeatReply> {
-        self.raft.lock().unwrap().handle_heartbeat(args.id as usize, args.term);
+        self.raft
+            .lock()
+            .unwrap()
+            .handle_heartbeat(args);
         Ok(HeartbeatReply {})
+    }
+
+    async fn append_entries(&self, args: AppendEntryArgs) -> labrpc::Result<AppendEntryReply> {
+        Ok(self.raft.lock().unwrap().handle_append_entry(args))
     }
 }

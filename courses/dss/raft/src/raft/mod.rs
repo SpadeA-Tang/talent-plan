@@ -6,6 +6,7 @@ pub mod progress;
 pub mod qurroum;
 pub mod node;
 pub mod raft;
+pub mod raftlog;
 #[cfg(test)]
 mod tests;
 pub mod utils;
