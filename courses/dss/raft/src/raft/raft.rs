@@ -255,6 +255,10 @@ impl Raft {
             .raft_log
             .match_term(arg.lastlog_index, arg.lastlog_term)
         {
+            if PRINT_APPEND {
+                println!("[{}] (last_index {}, last_term {}) has not match index with [{}] (prev_index {}, prev_term{})", 
+                    self.me, self.raft_log.last_index(),  self.raft_log.term(self.raft_log.last_index()), arg.id, arg.lastlog_index, arg.lastlog_term);
+            }
             reply.index = self.raft_log.last_index();
             return reply;
         }
@@ -272,7 +276,7 @@ impl Raft {
             "[{}] conflict_index {} self.commit_index {}",
             self.me, conflict_index, self.raft_log.commit_idx
         );
-        assert!(conflict_index >= self.raft_log.commit_idx);
+        assert!(conflict_index == 0 || conflict_index >= self.raft_log.commit_idx);
 
         // conflict_index == 0 means that this follower already has all ents
         if conflict_index != 0 {
@@ -310,6 +314,9 @@ impl Raft {
         } else {
             let mut pr = self.prs.progress_map.get_mut(&(resp.id as usize)).unwrap();
             pr.next_index = std::cmp::min(pr.next_index - 1, resp.index);
+            // it should not be less than 1
+            // todo: handle it elegantly.
+            pr.next_index = std::cmp::max(pr.next_index, 1);
 
             let tx = self.append_entries_router.tx.clone();
             self.send_append(resp.id as usize, tx);
