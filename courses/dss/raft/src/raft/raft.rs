@@ -291,6 +291,14 @@ impl Raft {
             self.raft_log.append_entries(&arg.entries[begin_index..]);
         }
         if self.raft_log.commit(arg.commit_index) {
+            if PRINT_APPEND {
+                println!(
+                    "[{}] update commit index to {} with ent {:?}",
+                    self.me,
+                    self.raft_log.commit_idx,
+                    self.raft_log.get_entry(self.raft_log.commit_idx)
+                );
+            }
             self.send_apply();
         }
 
@@ -440,7 +448,9 @@ impl Raft {
             }
             let peer = &self.peers[id];
             let peer_clone = peer.clone();
-            let arg_clone = arg.clone();
+            let mut arg_clone = arg.clone();
+            let pr = self.prs.progress_map.get(&id).unwrap();
+            arg_clone.commit_index = std::cmp::min(arg_clone.commit_index, pr.matched_index);
             peer.spawn(async move {
                 // todo: now, we don't need the result of hb
                 let _ = peer_clone.heartbeat(&arg_clone).await.map_err(Error::Rpc);
