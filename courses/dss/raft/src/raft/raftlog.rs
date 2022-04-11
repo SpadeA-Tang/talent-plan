@@ -44,6 +44,9 @@ impl RaftLog {
     }
 
     pub fn commit(&mut self, log_index: u64) -> bool {
+        if log_index > self.last_index() {
+            return false;
+        }
         if log_index > self.commit_idx {
             self.commit_idx = log_index;
             true

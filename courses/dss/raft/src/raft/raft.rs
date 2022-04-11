@@ -102,11 +102,12 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
             let _ = futures::executor::block_on(async { tx_timeout.send(true).await });
         });
 
+        let last_index = rf_locked.raft_log.last_index();
         let vote_request = RequestVoteArgs {
             id: rf_locked.me as u64,
             term: rf_locked.term as u64,
-            log_index: 0, // todo: works
-            log_term: rf_locked.term,
+            log_index: last_index, // todo: works
+            log_term: rf_locked.raft_log.term(last_index),
         };
 
         let (tx_vote, mut rx_vote): (
@@ -267,6 +268,10 @@ impl Raft {
 
         // 3. Find conflict entries
         let conflict_index = self.raft_log.find_conflict_entry(&arg.entries);
+        println!(
+            "[{}] conflict_index {} self.commit_index {}",
+            self.me, conflict_index, self.raft_log.commit_idx
+        );
         assert!(conflict_index >= self.raft_log.commit_idx);
 
         // conflict_index == 0 means that this follower already has all ents
@@ -339,6 +344,9 @@ impl Raft {
             };
             apply_msgs.push(apply_msg);
         }
+
+        // todo: apply index should not be updated here
+        // it is much better to apply it through channel messages
         self.raft_log.apply_idx = self.raft_log.commit_idx;
         thread::spawn(move || {
             // todo: Think about how to use send_all
@@ -448,7 +456,7 @@ impl Raft {
     fn become_leader(&mut self) {
         self.election_elapsed = 0;
         self.state = RaftState::Leader;
-        self.prs.record_vote(self.me, true);
+        self.vote = None;
 
         let me = self.me;
         let last_index = self.raft_log.last_index();
@@ -480,6 +488,7 @@ impl Raft {
         self.state = RaftState::Follower;
         self.term = term;
         self.leader = leader;
+        self.vote = None;
         self.election_elapsed = 0;
         self.prs.reset_vote_record();
 
@@ -507,7 +516,7 @@ impl Raft {
 
     pub fn handle_vote_req(&mut self, req: RequestVoteArgs) -> RequestVoteReply {
         if (req.term > self.term && self.log_up_to_date(req.log_term, req.log_index))
-            || (self.term == req.term && self.vote == Some(req.id as usize))
+            || (self.term == req.term && (self.vote == Some(req.id as usize) || self.vote == None))
         {
             if PRINT_ELECTION {
                 println!(
@@ -516,6 +525,7 @@ impl Raft {
                 );
             }
             self.become_follower(req.term, None);
+            self.vote = Some(req.id as usize);
 
             RequestVoteReply {
                 grant: true,
@@ -529,6 +539,9 @@ impl Raft {
                     self.me, req.id, self.term
                 );
             }
+            if req.term > self.term {
+                self.become_follower(req.term, None);
+            }
             RequestVoteReply {
                 grant: false,
                 id: self.me as u64,
@@ -537,10 +550,16 @@ impl Raft {
         }
     }
 
-    fn log_up_to_date(&self, term: u64, index: u64) -> bool {
-        if term > self.term || (term == self.term && index >= self.raft_log.last_index()) {
+    fn log_up_to_date(&self, log_term: u64, log_index: u64) -> bool {
+        let last_index = self.raft_log.last_index();
+        let last_term = self.raft_log.term(last_index);
+        if log_term > last_term || (log_term == last_term && log_index >= last_index) {
             true
         } else {
+            if PRINT_ELECTION {
+                println!("Voter's log (term {}, index {}) is not update to date than votee's log (term {}, index {})", 
+                    log_term, log_index, self.raft_log.term(last_index), last_index);
+            }
             false
         }
     }
