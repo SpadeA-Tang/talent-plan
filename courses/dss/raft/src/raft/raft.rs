@@ -12,7 +12,7 @@ use super::errors::*;
 use super::persister::*;
 use super::progress::*;
 
-const ELECTION_TIMEOUT: u64 = 500;
+const ELECTION_TIMEOUT: u64 = 200;
 const HEARTBEAT_TIMEOUT: u64 = 100;
 const SLEEP_DURATION: u64 = 30;
 
@@ -63,7 +63,8 @@ pub enum RaftState {
 
 pub fn gen_randomized_timeout() -> u64 {
     let mut rng = rand::thread_rng();
-    rng.gen_range(0, ELECTION_TIMEOUT)
+    // 增加随机时间的权重，可以减少拥有old log的node一直成为candidate扰乱选举的现象
+    rng.gen_range(0, ELECTION_TIMEOUT * 3)
 }
 
 pub fn background_worker(rf: Arc<Mutex<Raft>>) {
