@@ -45,10 +45,8 @@ impl Node {
             background_worker(rf2);
         });
 
-        let rx2 = node
-            .raft
-            .lock()
-            .unwrap()
+        let mut rf_locked = node.raft.lock().unwrap();
+        let rx2 = rf_locked
             .append_entries_router
             .rx
             .take()
@@ -57,6 +55,13 @@ impl Node {
             handle_append_resp(rf3, rx2);
         });
 
+        let rf4 = node.raft.clone();
+        let rx3 = rf_locked.apply_flag_router.rx.take().unwrap();
+        thread::spawn(move || {
+            apply_worker(rf4, rx3);
+        });
+        
+        drop(rf_locked);
         node
     }
 

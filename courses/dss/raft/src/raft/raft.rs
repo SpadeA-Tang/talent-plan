@@ -61,111 +61,6 @@ pub enum RaftState {
     Leader,
 }
 
-pub fn gen_randomized_timeout() -> u64 {
-    let mut rng = rand::thread_rng();
-    // 增加随机时间的权重，可以减少拥有old log的node一直成为candidate扰乱选举的现象
-    rng.gen_range(0, ELECTION_TIMEOUT * 3)
-}
-
-pub fn background_worker(rf: Arc<Mutex<Raft>>) {
-    // sleep some ms below SLEEP_DURATION
-    let mut rng = rand::thread_rng();
-    loop {
-        let sleep_time = rng.gen_range(0, SLEEP_DURATION);
-        thread::sleep(Duration::from_millis(sleep_time));
-
-        let mut rf_locked = rf.lock().unwrap();
-        rf_locked.election_elapsed += sleep_time;
-        rf_locked.heartbeat_elapsed += sleep_time;
-        if rf_locked.election_elapsed
-            < rf_locked.randomized_election_timeout + rf_locked.election_timeout
-        {
-            // Not timeout
-            if rf_locked.state == RaftState::Leader
-                && rf_locked.heartbeat_elapsed > rf_locked.heatbeat_timeout
-            {
-                rf_locked.bcast_heatbeat();
-            }
-            continue;
-        }
-        rf_locked.randomized_election_timeout = gen_randomized_timeout();
-
-        let (mut tx_timeout, mut rx_timeout): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
-            unbounded();
-
-        let term = rf_locked.term;
-        rf_locked.become_candidate(term);
-        let compaign_duration = rf_locked.election_timeout + rf_locked.randomized_election_timeout;
-
-        // 超时提醒
-        let _ = thread::spawn(move || {
-            thread::sleep(Duration::from_millis(compaign_duration));
-            let _ = futures::executor::block_on(async { tx_timeout.send(true).await });
-        });
-
-        let last_index = rf_locked.raft_log.last_index();
-        let vote_request = RequestVoteArgs {
-            id: rf_locked.me as u64,
-            term: rf_locked.term as u64,
-            log_index: last_index, // todo: works
-            log_term: rf_locked.raft_log.term(last_index),
-        };
-
-        let (tx_vote, mut rx_vote): (
-            UnboundedSender<RequestVoteReply>,
-            UnboundedReceiver<RequestVoteReply>,
-        ) = unbounded();
-        for &id in &rf_locked.peer_ids {
-            if id == rf_locked.me {
-                continue;
-            }
-            let req = vote_request.clone();
-            rf_locked.send_request_vote(id, req, tx_vote.clone());
-        }
-        drop(rf_locked);
-
-        futures::executor::block_on(async {
-            loop {
-                select! {
-                    _ = rx_timeout.next() => {
-                        let mut rf_locked = rf.lock().unwrap();
-                        let term = rf_locked.term;
-                        rf_locked.become_follower(term, None);
-                        break;
-                    }
-                    vote_resp = rx_vote.next() => {
-                        if let Some(vote_resp) = vote_resp
-                        {
-                            let mut rf_locked = rf.lock().unwrap();
-                            // 首先判断现在还是不是candidate
-                            let vote_resp = rf_locked.poll(vote_resp);
-                            if vote_resp == VoteResult::VoteWin {
-                                rf_locked.become_leader();
-                                break;
-                            } else if vote_resp == VoteResult::VoteLost {
-                                let term = rf_locked.term;
-                                rf_locked.become_follower(term, None);
-                                break;
-                            }
-                        }
-                    }
-                };
-            }
-        })
-    }
-}
-
-pub fn handle_append_resp(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<AppendEntryReply>) {
-    loop {
-        futures::executor::block_on(async {
-            while let Some(res) = rx.next().await {
-                let mut rf_locked = rf.lock().unwrap();
-                rf_locked.handle_append_resp(res);
-            }
-        })
-    }
-}
-
 use super::raftlog::*;
 
 pub struct Router<T> {
@@ -213,6 +108,31 @@ pub struct Raft {
     pub append_entries_router: Router<AppendEntryReply>,
     // msgs: Vec<Msg>,
     apply_ch: UnboundedSender<ApplyMsg>,
+    pub apply_flag_router: ApplyFlagRouter,
+}
+
+pub struct ApplyFlagRouter {
+    tx: std::sync::mpsc::Sender<ApplyFlag>,
+    pub rx: Option<std::sync::mpsc::Receiver<ApplyFlag>>,
+}
+
+impl ApplyFlagRouter {
+    pub fn new() -> Self {
+        let (tx, rx) = std::sync::mpsc::channel();
+        ApplyFlagRouter { tx, rx: Some(rx) }
+    }
+
+    pub fn send(
+        &self,
+        flag: ApplyFlag,
+    ) -> std::result::Result<(), std::sync::mpsc::SendError<ApplyFlag>> {
+        self.tx.send(flag)
+    }
+}
+
+pub enum ApplyFlag {
+    Apply,
+    Shutdown,
 }
 
 impl Raft {
@@ -300,7 +220,7 @@ impl Raft {
                     self.raft_log.get_entry(self.raft_log.commit_idx)
                 );
             }
-            self.send_apply();
+            self.send_apply_flag();
         }
 
         reply
@@ -344,32 +264,12 @@ impl Raft {
                     self.raft_log.get_entry(self.raft_log.commit_idx)
                 );
             }
-            self.send_apply();
+            self.send_apply_flag();
         }
     }
 
-    fn send_apply(&mut self) {
-        let mut apply_msgs = Vec::new();
-        let mut sender = self.apply_ch.clone();
-
-        for index in (self.raft_log.apply_idx + 1)..=self.raft_log.commit_idx {
-            let ent = self.raft_log.get_entry(index);
-            let apply_msg = ApplyMsg::Command {
-                data: ent.data.clone(),
-                index,
-            };
-            apply_msgs.push(apply_msg);
-        }
-
-        // todo: apply index should not be updated here
-        // it is much better to apply it through channel messages
-        self.raft_log.apply_idx = self.raft_log.commit_idx;
-        thread::spawn(move || {
-            // todo: Think about how to use send_all
-            for msg in apply_msgs {
-                futures::executor::block_on(async { sender.send(msg).await }).unwrap();
-            }
-        });
+    fn send_apply_flag(&mut self) {
+        self.apply_flag_router.send(ApplyFlag::Apply).unwrap();
     }
 
     /// the service or tester wants to create a Raft server. the ports
@@ -416,6 +316,7 @@ impl Raft {
             append_entries_router: Router::new(),
 
             apply_ch,
+            apply_flag_router: ApplyFlagRouter::new(),
         };
 
         // initialize from state persisted before a crash
@@ -430,7 +331,7 @@ impl Raft {
         if arg.term >= self.term {
             self.become_follower(arg.term, Some(arg.id as usize));
             if self.raft_log.commit(arg.commit_index) {
-                self.send_apply();
+                self.send_apply_flag();
             }
         }
     }
@@ -772,5 +673,141 @@ impl Raft {
         self.persist();
         let _ = &self.persister;
         let _ = &self.peers;
+    }
+}
+
+pub fn gen_randomized_timeout() -> u64 {
+    let mut rng = rand::thread_rng();
+    // 增加随机时间的权重，可以减少拥有old log的node一直成为candidate扰乱选举的现象
+    rng.gen_range(0, ELECTION_TIMEOUT * 3)
+}
+
+pub fn background_worker(rf: Arc<Mutex<Raft>>) {
+    // sleep some ms below SLEEP_DURATION
+    let mut rng = rand::thread_rng();
+    loop {
+        let sleep_time = rng.gen_range(0, SLEEP_DURATION);
+        thread::sleep(Duration::from_millis(sleep_time));
+
+        let mut rf_locked = rf.lock().unwrap();
+        rf_locked.election_elapsed += sleep_time;
+        rf_locked.heartbeat_elapsed += sleep_time;
+        if rf_locked.election_elapsed
+            < rf_locked.randomized_election_timeout + rf_locked.election_timeout
+        {
+            // Not timeout
+            if rf_locked.state == RaftState::Leader
+                && rf_locked.heartbeat_elapsed > rf_locked.heatbeat_timeout
+            {
+                rf_locked.bcast_heatbeat();
+            }
+            continue;
+        }
+        rf_locked.randomized_election_timeout = gen_randomized_timeout();
+
+        let (mut tx_timeout, mut rx_timeout): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
+            unbounded();
+
+        let term = rf_locked.term;
+        rf_locked.become_candidate(term);
+        let compaign_duration = rf_locked.election_timeout + rf_locked.randomized_election_timeout;
+
+        // 超时提醒
+        let _ = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(compaign_duration));
+            let _ = futures::executor::block_on(async { tx_timeout.send(true).await });
+        });
+
+        let last_index = rf_locked.raft_log.last_index();
+        let vote_request = RequestVoteArgs {
+            id: rf_locked.me as u64,
+            term: rf_locked.term as u64,
+            log_index: last_index, // todo: works
+            log_term: rf_locked.raft_log.term(last_index),
+        };
+
+        let (tx_vote, mut rx_vote): (
+            UnboundedSender<RequestVoteReply>,
+            UnboundedReceiver<RequestVoteReply>,
+        ) = unbounded();
+        for &id in &rf_locked.peer_ids {
+            if id == rf_locked.me {
+                continue;
+            }
+            let req = vote_request.clone();
+            rf_locked.send_request_vote(id, req, tx_vote.clone());
+        }
+        drop(rf_locked);
+
+        futures::executor::block_on(async {
+            loop {
+                select! {
+                    _ = rx_timeout.next() => {
+                        let mut rf_locked = rf.lock().unwrap();
+                        let term = rf_locked.term;
+                        rf_locked.become_follower(term, None);
+                        break;
+                    }
+                    vote_resp = rx_vote.next() => {
+                        if let Some(vote_resp) = vote_resp
+                        {
+                            let mut rf_locked = rf.lock().unwrap();
+                            // 首先判断现在还是不是candidate
+                            let vote_resp = rf_locked.poll(vote_resp);
+                            if vote_resp == VoteResult::VoteWin {
+                                rf_locked.become_leader();
+                                break;
+                            } else if vote_resp == VoteResult::VoteLost {
+                                let term = rf_locked.term;
+                                rf_locked.become_follower(term, None);
+                                break;
+                            }
+                        }
+                    }
+                };
+            }
+        })
+    }
+}
+
+pub fn handle_append_resp(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<AppendEntryReply>) {
+    loop {
+        futures::executor::block_on(async {
+            while let Some(res) = rx.next().await {
+                let mut rf_locked = rf.lock().unwrap();
+                rf_locked.handle_append_resp(res);
+            }
+        })
+    }
+}
+
+pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFlag>) {
+    loop {
+        match rx.recv().unwrap() {
+            ApplyFlag::Apply => {
+                let rf_locked = rf.lock().unwrap();
+                let mut apply_msgs = Vec::new();
+                let mut sender = rf_locked.apply_ch.clone();
+
+                for index in (rf_locked.raft_log.apply_idx + 1)..=rf_locked.raft_log.commit_idx {
+                    let ent = rf_locked.raft_log.get_entry(index);
+                    let apply_msg = ApplyMsg::Command {
+                        data: ent.data.clone(),
+                        index,
+                    };
+                    apply_msgs.push(apply_msg);
+                }
+                let commit_idx = rf_locked.raft_log.commit_idx;
+                drop(rf_locked);
+
+                for msg in apply_msgs {
+                    let _ = futures::executor::block_on(async { sender.send(msg).await });
+                }
+
+                let mut rf_locked = rf.lock().unwrap();
+                rf_locked.raft_log.apply_idx = commit_idx;
+            }
+            ApplyFlag::Shutdown => unimplemented!(),
+        }
     }
 }

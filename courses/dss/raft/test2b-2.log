@@ -1,1000 +1,183 @@
-[1] conflict_index 9 self.commit_index 8
-[4] send entries from 9 to 9 to peer 1
-[4] send entries from 2 to 9 to peer 2
-[4] send entries from 2 to 9 to peer 3
-[4] update commit index to 9 with ent Entry { term: 2, index: 9, data: [160, 6, 240, 163, 216, 149, 140, 242, 237, 152, 254, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 10 and term 2
-[4] send entries from 10 to 10 to peer 0
-[0] receive entries(10 - 10) from [4] with term 2 and commit index 9
-[0] conflict_index 10 self.commit_index 9
-[1] receive entries(10 - 10) from [4] with term 2 and commit index 9
-[1] conflict_index 10 self.commit_index 9
-[4] send entries from 10 to 10 to peer 1
-[4] send entries from 2 to 10 to peer 2
-[4] send entries from 2 to 10 to peer 3
-[4] update commit index to 10 with ent Entry { term: 2, index: 10, data: [160, 6, 195, 136, 233, 141, 185, 172, 146, 159, 69] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 11 and term 2
-[4] send entries from 11 to 11 to peer 0
-[0] receive entries(11 - 11) from [4] with term 2 and commit index 10
-[0] conflict_index 11 self.commit_index 10
-[1] receive entries(11 - 11) from [4] with term 2 and commit index 10
-[1] conflict_index 11 self.commit_index 10
-[4] send entries from 11 to 11 to peer 1
-[4] send entries from 2 to 11 to peer 2
-[4] send entries from 2 to 11 to peer 3
-[4] update commit index to 11 with ent Entry { term: 2, index: 11, data: [160, 6, 193, 162, 218, 179, 209, 134, 152, 174, 9] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 12 and term 2
-[4] send entries from 12 to 12 to peer 0
-[0] receive entries(12 - 12) from [4] with term 2 and commit index 11
-[0] conflict_index 12 self.commit_index 11
-[1] receive entries(12 - 12) from [4] with term 2 and commit index 11
-[1] conflict_index 12 self.commit_index 11
-[4] send entries from 12 to 12 to peer 1
-[4] send entries from 2 to 12 to peer 2
-[4] send entries from 2 to 12 to peer 3
-[4] update commit index to 12 with ent Entry { term: 2, index: 12, data: [160, 6, 129, 242, 236, 246, 197, 179, 146, 162, 115] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 13 and term 2
-[4] send entries from 13 to 13 to peer 0
-[0] receive entries(13 - 13) from [4] with term 2 and commit index 12
-[0] conflict_index 13 self.commit_index 12
-[1] receive entries(13 - 13) from [4] with term 2 and commit index 12
-[1] conflict_index 13 self.commit_index 12
-[4] send entries from 13 to 13 to peer 1
-[4] send entries from 2 to 13 to peer 2
-[4] send entries from 2 to 13 to peer 3
-[4] update commit index to 13 with ent Entry { term: 2, index: 13, data: [160, 6, 192, 139, 200, 155, 167, 175, 205, 128, 203, 1] }
-[3] becomes follower at term 2
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 14 and term 2
-[4] send entries from 14 to 14 to peer 0
-[0] receive entries(14 - 14) from [4] with term 2 and commit index 13
-[0] conflict_index 14 self.commit_index 13
-[1] receive entries(14 - 14) from [4] with term 2 and commit index 13
-[1] conflict_index 14 self.commit_index 13
-[4] send entries from 14 to 14 to peer 1
-[4] send entries from 2 to 14 to peer 2
-[4] send entries from 2 to 14 to peer 3
-[4] update commit index to 14 with ent Entry { term: 2, index: 14, data: [160, 6, 147, 149, 139, 180, 244, 245, 209, 156, 191, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 15 and term 2
-[4] send entries from 15 to 15 to peer 0
-[0] receive entries(15 - 15) from [4] with term 2 and commit index 14
-[0] conflict_index 15 self.commit_index 14
-[1] receive entries(15 - 15) from [4] with term 2 and commit index 14
-[1] conflict_index 15 self.commit_index 14
-[4] send entries from 15 to 15 to peer 1
-[4] send entries from 2 to 15 to peer 2
-[4] send entries from 2 to 15 to peer 3
-[4] update commit index to 15 with ent Entry { term: 2, index: 15, data: [160, 6, 233, 237, 253, 217, 223, 190, 189, 183, 62] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 16 and term 2
-[4] send entries from 16 to 16 to peer 0
-[0] receive entries(16 - 16) from [4] with term 2 and commit index 15
-[0] conflict_index 16 self.commit_index 15
-[1] receive entries(16 - 16) from [4] with term 2 and commit index 15
-[1] conflict_index 16 self.commit_index 15
-[4] send entries from 16 to 16 to peer 1
-[4] send entries from 2 to 16 to peer 2
-[4] send entries from 2 to 16 to peer 3
-[4] update commit index to 16 with ent Entry { term: 2, index: 16, data: [160, 6, 138, 131, 138, 235, 163, 151, 137, 238, 179, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 17 and term 2
-[4] send entries from 17 to 17 to peer 0
-[0] receive entries(17 - 17) from [4] with term 2 and commit index 16
-[0] conflict_index 17 self.commit_index 16
-[1] receive entries(17 - 17) from [4] with term 2 and commit index 16
-[1] conflict_index 17 self.commit_index 16
-[4] send entries from 17 to 17 to peer 1
-[4] send entries from 2 to 17 to peer 2
-[4] send entries from 2 to 17 to peer 3
-[4] update commit index to 17 with ent Entry { term: 2, index: 17, data: [160, 6, 201, 190, 229, 169, 136, 128, 129, 250, 119] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 18 and term 2
-[4] send entries from 18 to 18 to peer 0
-[0] receive entries(18 - 18) from [4] with term 2 and commit index 17
-[0] conflict_index 18 self.commit_index 17
-[1] receive entries(18 - 18) from [4] with term 2 and commit index 17
-[1] conflict_index 18 self.commit_index 17
-[4] send entries from 18 to 18 to peer 1
-[4] send entries from 2 to 18 to peer 2
-[4] send entries from 2 to 18 to peer 3
-[4] update commit index to 18 with ent Entry { term: 2, index: 18, data: [160, 6, 226, 141, 140, 220, 162, 253, 128, 143, 8] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 19 and term 2
-[4] send entries from 19 to 19 to peer 0
-[4] send entries from 19 to 19 to peer 1
-[0] receive entries(19 - 19) from [4] with term 2 and commit index 18
-[0] conflict_index 19 self.commit_index 18
-[4] send entries from 2 to 19 to peer 2
-[1] receive entries(19 - 19) from [4] with term 2 and commit index 18
-[1] conflict_index 19 self.commit_index 18
-[4] send entries from 2 to 19 to peer 3
-[4] update commit index to 19 with ent Entry { term: 2, index: 19, data: [160, 6, 181, 237, 240, 246, 224, 253, 163, 231, 232, 1] }
-[3] becomes candidate at term 3
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 20 and term 2
-[4] send entries from 20 to 20 to peer 0
-[4] send entries from 20 to 20 to peer 1
-[4] send entries from 2 to 20 to peer 2
-[1] receive entries(20 - 20) from [4] with term 2 and commit index 19
-[1] conflict_index 20 self.commit_index 19
-[4] send entries from 2 to 20 to peer 3
-[0] receive entries(20 - 20) from [4] with term 2 and commit index 19
-[0] conflict_index 20 self.commit_index 19
-[4] update commit index to 20 with ent Entry { term: 2, index: 20, data: [160, 6, 191, 207, 205, 240, 206, 226, 212, 193, 88] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 21 and term 2
-[4] send entries from 21 to 21 to peer 0
-[0] receive entries(21 - 21) from [4] with term 2 and commit index 20
-[0] conflict_index 21 self.commit_index 20
-[1] receive entries(21 - 21) from [4] with term 2 and commit index 20
-[1] conflict_index 21 self.commit_index 20
-[4] send entries from 21 to 21 to peer 1
-[4] send entries from 2 to 21 to peer 2
-[4] send entries from 2 to 21 to peer 3
-[4] update commit index to 21 with ent Entry { term: 2, index: 21, data: [160, 6, 153, 253, 194, 184, 250, 172, 207, 134, 224, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 22 and term 2
-[4] send entries from 22 to 22 to peer 0
-[0] receive entries(22 - 22) from [4] with term 2 and commit index 21
-[0] conflict_index 22 self.commit_index 21
-[1] receive entries(22 - 22) from [4] with term 2 and commit index 21
-[1] conflict_index 22 self.commit_index 21
-[4] send entries from 22 to 22 to peer 1
-[4] send entries from 2 to 22 to peer 2
-[4] send entries from 2 to 22 to peer 3
-[4] update commit index to 22 with ent Entry { term: 2, index: 22, data: [160, 6, 132, 237, 149, 248, 219, 189, 186, 227, 57] }
-[3] becomes follower at term 3
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 23 and term 2
-[4] send entries from 23 to 23 to peer 0
-[0] receive entries(23 - 23) from [4] with term 2 and commit index 22
-[0] conflict_index 23 self.commit_index 22
-[1] receive entries(23 - 23) from [4] with term 2 and commit index 22
-[1] conflict_index 23 self.commit_index 22
-[4] send entries from 23 to 23 to peer 1
-[4] send entries from 2 to 23 to peer 2
-[4] send entries from 2 to 23 to peer 3
-[4] update commit index to 23 with ent Entry { term: 2, index: 23, data: [160, 6, 183, 224, 182, 202, 252, 233, 229, 241, 72] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 24 and term 2
-[4] send entries from 24 to 24 to peer 0
-[4] send entries from 24 to 24 to peer 1
-[0] receive entries(24 - 24) from [4] with term 2 and commit index 23
-[0] conflict_index 24 self.commit_index 23
-[4] send entries from 2 to 24 to peer 2
-[1] receive entries(24 - 24) from [4] with term 2 and commit index 23
-[1] conflict_index 24 self.commit_index 23
-[4] send entries from 2 to 24 to peer 3
-[4] update commit index to 24 with ent Entry { term: 2, index: 24, data: [160, 6, 165, 151, 130, 147, 149, 133, 200, 192, 130, 1] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 25 and term 2
-[4] send entries from 25 to 25 to peer 0
-[0] receive entries(25 - 25) from [4] with term 2 and commit index 24
-[0] conflict_index 25 self.commit_index 24
-[1] receive entries(25 - 25) from [4] with term 2 and commit index 24
-[1] conflict_index 25 self.commit_index 24
-[4] send entries from 25 to 25 to peer 1
-[4] send entries from 2 to 25 to peer 2
-[4] send entries from 2 to 25 to peer 3
-[4] update commit index to 25 with ent Entry { term: 2, index: 25, data: [160, 6, 174, 138, 251, 153, 238, 218, 133, 167, 4] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 26 and term 2
-[4] send entries from 26 to 26 to peer 0
-[0] receive entries(26 - 26) from [4] with term 2 and commit index 25
-[0] conflict_index 26 self.commit_index 25
-[1] receive entries(26 - 26) from [4] with term 2 and commit index 25
-[1] conflict_index 26 self.commit_index 25
-[4] send entries from 26 to 26 to peer 1
-[4] send entries from 2 to 26 to peer 2
-[4] send entries from 2 to 26 to peer 3
-[4] update commit index to 26 with ent Entry { term: 2, index: 26, data: [160, 6, 136, 151, 180, 231, 229, 173, 140, 131, 38] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 27 and term 2
-[4] send entries from 27 to 27 to peer 0
-[0] receive entries(27 - 27) from [4] with term 2 and commit index 26
-[0] conflict_index 27 self.commit_index 26
-[1] receive entries(27 - 27) from [4] with term 2 and commit index 26
-[1] conflict_index 27 self.commit_index 26
-[4] send entries from 27 to 27 to peer 1
-[4] send entries from 2 to 27 to peer 2
-[4] send entries from 2 to 27 to peer 3
-[4] update commit index to 27 with ent Entry { term: 2, index: 27, data: [160, 6, 221, 143, 232, 245, 185, 148, 220, 174, 73] }
-[3] becomes candidate at term 4
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 28 and term 2
-[4] send entries from 28 to 28 to peer 0
-[0] receive entries(28 - 28) from [4] with term 2 and commit index 27
-[0] conflict_index 28 self.commit_index 27
-[1] receive entries(28 - 28) from [4] with term 2 and commit index 27
-[1] conflict_index 28 self.commit_index 27
-[4] send entries from 28 to 28 to peer 1
-[4] send entries from 2 to 28 to peer 2
-[4] send entries from 2 to 28 to peer 3
-[4] update commit index to 28 with ent Entry { term: 2, index: 28, data: [160, 6, 184, 179, 135, 184, 175, 135, 253, 132, 48] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 29 and term 2
-[4] send entries from 29 to 29 to peer 0
-[0] receive entries(29 - 29) from [4] with term 2 and commit index 28
-[0] conflict_index 29 self.commit_index 28
-[1] receive entries(29 - 29) from [4] with term 2 and commit index 28
-[1] conflict_index 29 self.commit_index 28
-[4] send entries from 29 to 29 to peer 1
-[4] send entries from 2 to 29 to peer 2
-[4] send entries from 2 to 29 to peer 3
-[4] update commit index to 29 with ent Entry { term: 2, index: 29, data: [160, 6, 159, 243, 181, 207, 154, 162, 223, 251, 57] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 30 and term 2
-[4] send entries from 30 to 30 to peer 0
-[0] receive entries(30 - 30) from [4] with term 2 and commit index 29
-[0] conflict_index 30 self.commit_index 29
-[1] receive entries(30 - 30) from [4] with term 2 and commit index 29
-[1] conflict_index 30 self.commit_index 29
-[4] send entries from 30 to 30 to peer 1
-[4] send entries from 2 to 30 to peer 2
-[4] send entries from 2 to 30 to peer 3
-[4] update commit index to 30 with ent Entry { term: 2, index: 30, data: [160, 6, 199, 222, 146, 139, 145, 142, 170, 221, 127] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 31 and term 2
-[4] send entries from 31 to 31 to peer 0
-[0] receive entries(31 - 31) from [4] with term 2 and commit index 30
-[0] conflict_index 31 self.commit_index 30
-[1] receive entries(31 - 31) from [4] with term 2 and commit index 30
-[1] conflict_index 31 self.commit_index 30
-[4] send entries from 31 to 31 to peer 1
-[4] send entries from 2 to 31 to peer 2
-[4] send entries from 2 to 31 to peer 3
-[4] update commit index to 31 with ent Entry { term: 2, index: 31, data: [160, 6, 236, 206, 177, 145, 234, 183, 148, 165, 76] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 32 and term 2
-[4] send entries from 32 to 32 to peer 0
-[0] receive entries(32 - 32) from [4] with term 2 and commit index 31
-[0] conflict_index 32 self.commit_index 31
-[1] receive entries(32 - 32) from [4] with term 2 and commit index 31
-[1] conflict_index 32 self.commit_index 31
-[4] send entries from 32 to 32 to peer 1
-[4] send entries from 2 to 32 to peer 2
-[4] send entries from 2 to 32 to peer 3
-[4] update commit index to 32 with ent Entry { term: 2, index: 32, data: [160, 6, 182, 145, 240, 190, 183, 173, 137, 234, 177, 1] }
-[3] becomes follower at term 4
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 33 and term 2
-[4] send entries from 33 to 33 to peer 0
-[0] receive entries(33 - 33) from [4] with term 2 and commit index 32
-[0] conflict_index 33 self.commit_index 32
-[1] receive entries(33 - 33) from [4] with term 2 and commit index 32
-[1] conflict_index 33 self.commit_index 32
-[4] send entries from 33 to 33 to peer 1
-[4] send entries from 2 to 33 to peer 2
-[4] send entries from 2 to 33 to peer 3
-[4] update commit index to 33 with ent Entry { term: 2, index: 33, data: [160, 6, 212, 169, 233, 190, 198, 185, 210, 213, 193, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 34 and term 2
-[4] send entries from 34 to 34 to peer 0
-[0] receive entries(34 - 34) from [4] with term 2 and commit index 33
-[0] conflict_index 34 self.commit_index 33
-[1] receive entries(34 - 34) from [4] with term 2 and commit index 33
-[1] conflict_index 34 self.commit_index 33
-[4] send entries from 34 to 34 to peer 1
-[4] send entries from 2 to 34 to peer 2
-[4] send entries from 2 to 34 to peer 3
-[4] update commit index to 34 with ent Entry { term: 2, index: 34, data: [160, 6, 198, 139, 137, 177, 142, 204, 228, 142, 139, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 35 and term 2
-[4] send entries from 35 to 35 to peer 0
-[0] receive entries(35 - 35) from [4] with term 2 and commit index 34
-[0] conflict_index 35 self.commit_index 34
-[1] receive entries(35 - 35) from [4] with term 2 and commit index 34
-[1] conflict_index 35 self.commit_index 34
-[4] send entries from 35 to 35 to peer 1
-[4] send entries from 2 to 35 to peer 2
-[4] send entries from 2 to 35 to peer 3
-[4] update commit index to 35 with ent Entry { term: 2, index: 35, data: [160, 6, 249, 219, 194, 221, 168, 253, 189, 201, 32] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 36 and term 2
-[4] send entries from 36 to 36 to peer 0
-[0] receive entries(36 - 36) from [4] with term 2 and commit index 35
-[0] conflict_index 36 self.commit_index 35
-[1] receive entries(36 - 36) from [4] with term 2 and commit index 35
-[1] conflict_index 36 self.commit_index 35
-[4] send entries from 36 to 36 to peer 1
-[4] send entries from 2 to 36 to peer 2
-[4] send entries from 2 to 36 to peer 3
-[4] update commit index to 36 with ent Entry { term: 2, index: 36, data: [160, 6, 161, 235, 192, 152, 164, 142, 232, 192, 228, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 37 and term 2
-[4] send entries from 37 to 37 to peer 0
-[0] receive entries(37 - 37) from [4] with term 2 and commit index 36
-[0] conflict_index 37 self.commit_index 36
-[1] receive entries(37 - 37) from [4] with term 2 and commit index 36
-[1] conflict_index 37 self.commit_index 36
-[4] send entries from 37 to 37 to peer 1
-[4] send entries from 2 to 37 to peer 2
-[4] send entries from 2 to 37 to peer 3
-[4] update commit index to 37 with ent Entry { term: 2, index: 37, data: [160, 6, 137, 251, 220, 134, 177, 143, 133, 164, 28] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 38 and term 2
-[4] send entries from 38 to 38 to peer 0
-[0] receive entries(38 - 38) from [4] with term 2 and commit index 37
-[0] conflict_index 38 self.commit_index 37
-[1] receive entries(38 - 38) from [4] with term 2 and commit index 37
-[1] conflict_index 38 self.commit_index 37
-[4] send entries from 38 to 38 to peer 1
-[4] send entries from 2 to 38 to peer 2
-[4] send entries from 2 to 38 to peer 3
-[4] update commit index to 38 with ent Entry { term: 2, index: 38, data: [160, 6, 190, 133, 189, 206, 164, 171, 194, 169, 225, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 39 and term 2
-[4] send entries from 39 to 39 to peer 0
-[0] receive entries(39 - 39) from [4] with term 2 and commit index 38
-[0] conflict_index 39 self.commit_index 38
-[1] receive entries(39 - 39) from [4] with term 2 and commit index 38
-[1] conflict_index 39 self.commit_index 38
-[4] send entries from 39 to 39 to peer 1
-[4] send entries from 2 to 39 to peer 2
-[4] send entries from 2 to 39 to peer 3
-[4] update commit index to 39 with ent Entry { term: 2, index: 39, data: [160, 6, 238, 139, 198, 200, 201, 220, 246, 254, 68] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 40 and term 2
-[4] send entries from 40 to 40 to peer 0
-[0] receive entries(40 - 40) from [4] with term 2 and commit index 39
-[0] conflict_index 40 self.commit_index 39
-[1] receive entries(40 - 40) from [4] with term 2 and commit index 39
-[1] conflict_index 40 self.commit_index 39
-[4] send entries from 40 to 40 to peer 1
-[4] send entries from 2 to 40 to peer 2
-[4] send entries from 2 to 40 to peer 3
-[4] update commit index to 40 with ent Entry { term: 2, index: 40, data: [160, 6, 231, 211, 167, 153, 138, 218, 177, 148, 9] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 41 and term 2
-[4] send entries from 41 to 41 to peer 0
-[0] receive entries(41 - 41) from [4] with term 2 and commit index 40
-[0] conflict_index 41 self.commit_index 40
-[1] receive entries(41 - 41) from [4] with term 2 and commit index 40
-[1] conflict_index 41 self.commit_index 40
-[4] send entries from 41 to 41 to peer 1
-[4] send entries from 2 to 41 to peer 2
-[4] send entries from 2 to 41 to peer 3
-[4] update commit index to 41 with ent Entry { term: 2, index: 41, data: [160, 6, 220, 129, 182, 147, 157, 161, 220, 209, 47] }
-[3] becomes candidate at term 5
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 42 and term 2
-[4] send entries from 42 to 42 to peer 0
-[4] send entries from 42 to 42 to peer 1
-[0] receive entries(42 - 42) from [4] with term 2 and commit index 41
-[0] conflict_index 42 self.commit_index 41
-[4] send entries from 2 to 42 to peer 2
-[1] receive entries(42 - 42) from [4] with term 2 and commit index 41
-[1] conflict_index 42 self.commit_index 41
-[4] send entries from 2 to 42 to peer 3
-[4] update commit index to 42 with ent Entry { term: 2, index: 42, data: [160, 6, 193, 145, 214, 242, 212, 179, 128, 180, 19] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 43 and term 2
-[4] send entries from 43 to 43 to peer 0
-[0] receive entries(43 - 43) from [4] with term 2 and commit index 42
-[0] conflict_index 43 self.commit_index 42
-[1] receive entries(43 - 43) from [4] with term 2 and commit index 42
-[1] conflict_index 43 self.commit_index 42
-[4] send entries from 43 to 43 to peer 1
-[4] send entries from 2 to 43 to peer 2
-[4] send entries from 2 to 43 to peer 3
-[4] update commit index to 43 with ent Entry { term: 2, index: 43, data: [160, 6, 161, 235, 169, 161, 194, 135, 216, 134, 183, 1] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 44 and term 2
-[4] send entries from 44 to 44 to peer 0
-[0] receive entries(44 - 44) from [4] with term 2 and commit index 43
-[0] conflict_index 44 self.commit_index 43
-[1] receive entries(44 - 44) from [4] with term 2 and commit index 43
-[1] conflict_index 44 self.commit_index 43
-[4] send entries from 44 to 44 to peer 1
-[4] send entries from 2 to 44 to peer 2
-[4] send entries from 2 to 44 to peer 3
-[4] update commit index to 44 with ent Entry { term: 2, index: 44, data: [160, 6, 239, 217, 210, 232, 239, 152, 210, 199, 139, 1] }
-[3] becomes follower at term 5
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 45 and term 2
-[4] send entries from 45 to 45 to peer 0
-[0] receive entries(45 - 45) from [4] with term 2 and commit index 44
-[0] conflict_index 45 self.commit_index 44
-[1] receive entries(45 - 45) from [4] with term 2 and commit index 44
-[1] conflict_index 45 self.commit_index 44
-[4] send entries from 45 to 45 to peer 1
-[4] send entries from 2 to 45 to peer 2
-[4] send entries from 2 to 45 to peer 3
-[4] update commit index to 45 with ent Entry { term: 2, index: 45, data: [160, 6, 162, 154, 220, 213, 206, 162, 197, 232, 69] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 46 and term 2
-[4] send entries from 46 to 46 to peer 0
-[4] send entries from 46 to 46 to peer 1
-[0] receive entries(46 - 46) from [4] with term 2 and commit index 45
-[0] conflict_index 46 self.commit_index 45
-[4] send entries from 2 to 46 to peer 2
-[1] receive entries(46 - 46) from [4] with term 2 and commit index 45
-[1] conflict_index 46 self.commit_index 45
-[4] send entries from 2 to 46 to peer 3
-[4] update commit index to 46 with ent Entry { term: 2, index: 46, data: [160, 6, 143, 162, 233, 205, 129, 233, 207, 167, 155, 1] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 47 and term 2
-[4] send entries from 47 to 47 to peer 0
-[0] receive entries(47 - 47) from [4] with term 2 and commit index 46
-[0] conflict_index 47 self.commit_index 46
-[1] receive entries(47 - 47) from [4] with term 2 and commit index 46
-[1] conflict_index 47 self.commit_index 46
-[4] send entries from 47 to 47 to peer 1
-[4] send entries from 2 to 47 to peer 2
-[4] send entries from 2 to 47 to peer 3
-[4] update commit index to 47 with ent Entry { term: 2, index: 47, data: [160, 6, 154, 128, 141, 206, 233, 188, 246, 167, 56] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 48 and term 2
-[4] send entries from 48 to 48 to peer 0
-[4] send entries from 48 to 48 to peer 1
-[4] send entries from 2 to 48 to peer 2
-[1] receive entries(48 - 48) from [4] with term 2 and commit index 47
-[1] conflict_index 48 self.commit_index 47
-[4] send entries from 2 to 48 to peer 3
-[0] receive entries(48 - 48) from [4] with term 2 and commit index 47
-[0] conflict_index 48 self.commit_index 47
-[4] update commit index to 48 with ent Entry { term: 2, index: 48, data: [160, 6, 139, 147, 221, 166, 223, 205, 250, 163, 36] }
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 49 and term 2
-[4] send entries from 49 to 49 to peer 0
-[0] receive entries(49 - 49) from [4] with term 2 and commit index 48
-[0] conflict_index 49 self.commit_index 48
-[1] receive entries(49 - 49) from [4] with term 2 and commit index 48
-[1] conflict_index 49 self.commit_index 48
-[4] send entries from 49 to 49 to peer 1
-[4] send entries from 2 to 49 to peer 2
-[4] send entries from 2 to 49 to peer 3
-[4] update commit index to 49 with ent Entry { term: 2, index: 49, data: [160, 6, 154, 215, 198, 227, 130, 207, 155, 194, 134, 1] }
-[3] becomes candidate at term 6
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[4] start command of index 50 and term 2
-[4] send entries from 50 to 50 to peer 0
-[0] receive entries(50 - 50) from [4] with term 2 and commit index 49
-[0] conflict_index 50 self.commit_index 49
-[1] receive entries(50 - 50) from [4] with term 2 and commit index 49
-[1] conflict_index 50 self.commit_index 49
-[4] send entries from 50 to 50 to peer 1
-[4] send entries from 2 to 50 to peer 2
-[4] send entries from 2 to 50 to peer 3
-[4] update commit index to 50 with ent Entry { term: 2, index: 50, data: [160, 6, 238, 171, 245, 225, 235, 145, 244, 248, 56] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[4] start command of index 51 and term 2
-[4] send entries from 51 to 51 to peer 0
-[0] receive entries(51 - 51) from [4] with term 2 and commit index 50
-[0] conflict_index 51 self.commit_index 50
-[1] receive entries(51 - 51) from [4] with term 2 and commit index 50
-[1] conflict_index 51 self.commit_index 50
-[4] send entries from 51 to 51 to peer 1
-[4] send entries from 2 to 51 to peer 2
-[4] send entries from 2 to 51 to peer 3
-[4] update commit index to 51 with ent Entry { term: 2, index: 51, data: [160, 6, 220, 178, 252, 176, 214, 150, 194, 239, 91] }
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-[0] becomes follower at term 2
-[1] becomes follower at term 2
-[3] becomes follower at term 6
-[1] becomes follower at term 2
-[0] becomes follower at term 2
-disconnect(0)
-[4] start command of index 52 and term 2
-[4] send entries from 52 to 52 to peer 0
-[4] send entries from 52 to 52 to peer 1
-[1] receive entries(52 - 52) from [4] with term 2 and commit index 51
-[1] conflict_index 52 self.commit_index 51
-[4] send entries from 2 to 52 to peer 2
-[4] send entries from 2 to 52 to peer 3
-[4] start command of index 53 and term 2
-[4] send entries from 52 to 53 to peer 0
-[4] send entries from 52 to 53 to peer 1
-[1] receive entries(52 - 53) from [4] with term 2 and commit index 51
-[1] conflict_index 53 self.commit_index 51
-[4] send entries from 2 to 53 to peer 2
-[4] send entries from 2 to 53 to peer 3
-[4] start command of index 54 and term 2
-[4] send entries from 52 to 54 to peer 0
-[4] send entries from 52 to 54 to peer 1
-[1] receive entries(52 - 54) from [4] with term 2 and commit index 51
-[1] conflict_index 54 self.commit_index 51
-[4] send entries from 2 to 54 to peer 2
-[4] send entries from 2 to 54 to peer 3
-[4] start command of index 55 and term 2
-[4] send entries from 52 to 55 to peer 0
-[4] send entries from 52 to 55 to peer 1
-[1] receive entries(52 - 55) from [4] with term 2 and commit index 51
-[1] conflict_index 55 self.commit_index 51
-[4] send entries from 2 to 55 to peer 2
-[4] send entries from 2 to 55 to peer 3
-[4] start command of index 56 and term 2
-[4] send entries from 52 to 56 to peer 0
-[4] send entries from 52 to 56 to peer 1
-[1] receive entries(52 - 56) from [4] with term 2 and commit index 51
-[1] conflict_index 56 self.commit_index 51
-[4] send entries from 2 to 56 to peer 2
-[4] send entries from 2 to 56 to peer 3
-[4] start command of index 57 and term 2
-[4] send entries from 52 to 57 to peer 0
-[4] send entries from 52 to 57 to peer 1
-[1] receive entries(52 - 57) from [4] with term 2 and commit index 51
-[1] conflict_index 57 self.commit_index 51
-[4] send entries from 2 to 57 to peer 2
-[4] send entries from 2 to 57 to peer 3
-[4] start command of index 58 and term 2
-[4] send entries from 52 to 58 to peer 0
-[4] send entries from 52 to 58 to peer 1
-[1] receive entries(52 - 58) from [4] with term 2 and commit index 51
-[1] conflict_index 58 self.commit_index 51
-[4] send entries from 2 to 58 to peer 2
-[4] send entries from 2 to 58 to peer 3
-[4] start command of index 59 and term 2
-[4] send entries from 52 to 59 to peer 0
-[4] send entries from 52 to 59 to peer 1
-[1] receive entries(52 - 59) from [4] with term 2 and commit index 51
-[1] conflict_index 59 self.commit_index 51
-[4] send entries from 2 to 59 to peer 2
-[4] send entries from 2 to 59 to peer 3
-[4] start command of index 60 and term 2
-[4] send entries from 52 to 60 to peer 0
-[4] send entries from 52 to 60 to peer 1
-[1] receive entries(52 - 60) from [4] with term 2 and commit index 51
-[1] conflict_index 60 self.commit_index 51
-[4] send entries from 2 to 60 to peer 2
-[4] send entries from 2 to 60 to peer 3
-[4] start command of index 61 and term 2
-[4] send entries from 52 to 61 to peer 0
-[4] send entries from 52 to 61 to peer 1
-[1] receive entries(52 - 61) from [4] with term 2 and commit index 51
-[1] conflict_index 61 self.commit_index 51
-[4] send entries from 2 to 61 to peer 2
-[4] send entries from 2 to 61 to peer 3
-[4] start command of index 62 and term 2
-[4] send entries from 52 to 62 to peer 0
-[4] send entries from 52 to 62 to peer 1
-[1] receive entries(52 - 62) from [4] with term 2 and commit index 51
-[1] conflict_index 62 self.commit_index 51
-[4] send entries from 2 to 62 to peer 2
-[4] send entries from 2 to 62 to peer 3
-[4] start command of index 63 and term 2
-[4] send entries from 52 to 63 to peer 0
-[4] send entries from 52 to 63 to peer 1
-[1] receive entries(52 - 63) from [4] with term 2 and commit index 51
-[1] conflict_index 63 self.commit_index 51
-[4] send entries from 2 to 63 to peer 2
-[4] send entries from 2 to 63 to peer 3
-[4] start command of index 64 and term 2
-[4] send entries from 52 to 64 to peer 0
-[4] send entries from 52 to 64 to peer 1
-[1] receive entries(52 - 64) from [4] with term 2 and commit index 51
-[1] conflict_index 64 self.commit_index 51
-[4] send entries from 2 to 64 to peer 2
-[4] send entries from 2 to 64 to peer 3
-[4] start command of index 65 and term 2
-[4] send entries from 52 to 65 to peer 0
-[4] send entries from 52 to 65 to peer 1
-[1] receive entries(52 - 65) from [4] with term 2 and commit index 51
-[1] conflict_index 65 self.commit_index 51
-[4] send entries from 2 to 65 to peer 2
-[4] send entries from 2 to 65 to peer 3
-[4] start command of index 66 and term 2
-[4] send entries from 52 to 66 to peer 0
-[4] send entries from 52 to 66 to peer 1
-[1] receive entries(52 - 66) from [4] with term 2 and commit index 51
-[1] conflict_index 66 self.commit_index 51
-[4] send entries from 2 to 66 to peer 2
-[4] send entries from 2 to 66 to peer 3
-[4] start command of index 67 and term 2
-[4] send entries from 52 to 67 to peer 0
-[4] send entries from 52 to 67 to peer 1
-[1] receive entries(52 - 67) from [4] with term 2 and commit index 51
-[1] conflict_index 67 self.commit_index 51
-[4] send entries from 2 to 67 to peer 2
-[4] send entries from 2 to 67 to peer 3
-[4] start command of index 68 and term 2
-[4] send entries from 52 to 68 to peer 0
-[4] send entries from 52 to 68 to peer 1
-[1] receive entries(52 - 68) from [4] with term 2 and commit index 51
-[1] conflict_index 68 self.commit_index 51
-[4] send entries from 2 to 68 to peer 2
-[4] send entries from 2 to 68 to peer 3
-[4] start command of index 69 and term 2
-[4] send entries from 52 to 69 to peer 0
-[4] send entries from 52 to 69 to peer 1
-[1] receive entries(52 - 69) from [4] with term 2 and commit index 51
-[1] conflict_index 69 self.commit_index 51
-[4] send entries from 2 to 69 to peer 2
-[4] send entries from 2 to 69 to peer 3
-[4] start command of index 70 and term 2
-[4] send entries from 52 to 70 to peer 0
-[4] send entries from 52 to 70 to peer 1
-[1] receive entries(52 - 70) from [4] with term 2 and commit index 51
-[1] conflict_index 70 self.commit_index 51
-[4] send entries from 2 to 70 to peer 2
-[4] send entries from 2 to 70 to peer 3
-[4] start command of index 71 and term 2
-[4] send entries from 52 to 71 to peer 0
-[4] send entries from 52 to 71 to peer 1
-[1] receive entries(52 - 71) from [4] with term 2 and commit index 51
-[1] conflict_index 71 self.commit_index 51
-[4] send entries from 2 to 71 to peer 2
-[4] send entries from 2 to 71 to peer 3
-[4] start command of index 72 and term 2
-[4] send entries from 52 to 72 to peer 0
-[4] send entries from 53 to 72 to peer 1
-[1] receive entries(53 - 72) from [4] with term 2 and commit index 51
-[1] conflict_index 72 self.commit_index 51
-[4] send entries from 2 to 72 to peer 2
-[4] send entries from 2 to 72 to peer 3
-[4] start command of index 73 and term 2
-[4] send entries from 52 to 73 to peer 0
-[4] send entries from 53 to 73 to peer 1
-[1] receive entries(53 - 73) from [4] with term 2 and commit index 51
-[1] conflict_index 73 self.commit_index 51
-[4] send entries from 2 to 73 to peer 2
-[4] send entries from 2 to 73 to peer 3
-[4] start command of index 74 and term 2
-[4] send entries from 52 to 74 to peer 0
-[4] send entries from 53 to 74 to peer 1
-[1] receive entries(53 - 74) from [4] with term 2 and commit index 51
-[1] conflict_index 74 self.commit_index 51
-[4] send entries from 2 to 74 to peer 2
-[4] send entries from 2 to 74 to peer 3
-[4] start command of index 75 and term 2
-[4] send entries from 52 to 75 to peer 0
-[4] send entries from 53 to 75 to peer 1
-[1] receive entries(53 - 75) from [4] with term 2 and commit index 51
-[1] conflict_index 75 self.commit_index 51
-[4] send entries from 2 to 75 to peer 2
-[4] send entries from 2 to 75 to peer 3
-[4] start command of index 76 and term 2
-[4] send entries from 52 to 76 to peer 0
-[4] send entries from 53 to 76 to peer 1
-[1] receive entries(53 - 76) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 76 to peer 2
-[1] conflict_index 76 self.commit_index 51
-[4] send entries from 2 to 76 to peer 3
-[4] start command of index 77 and term 2
-[4] send entries from 52 to 77 to peer 0
-[4] send entries from 53 to 77 to peer 1
-[1] receive entries(53 - 77) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 77 to peer 2
-[1] conflict_index 77 self.commit_index 51
-[4] send entries from 2 to 77 to peer 3
-[4] start command of index 78 and term 2
-[4] send entries from 52 to 78 to peer 0
-[4] send entries from 53 to 78 to peer 1
-[1] receive entries(53 - 78) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 78 to peer 2
-[1] conflict_index 78 self.commit_index 51
-[4] send entries from 2 to 78 to peer 3
-[4] start command of index 79 and term 2
-[4] send entries from 52 to 79 to peer 0
-[4] send entries from 53 to 79 to peer 1
-[1] receive entries(53 - 79) from [4] with term 2 and commit index 51
-[1] conflict_index 79 self.commit_index 51
-[4] send entries from 2 to 79 to peer 2
-[4] send entries from 2 to 79 to peer 3
-[4] start command of index 80 and term 2
-[4] send entries from 52 to 80 to peer 0
-[4] send entries from 53 to 80 to peer 1
-[1] receive entries(53 - 80) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 80 to peer 2
-[1] conflict_index 80 self.commit_index 51
-[4] send entries from 2 to 80 to peer 3
-[4] start command of index 81 and term 2
-[4] send entries from 52 to 81 to peer 0
-[4] send entries from 53 to 81 to peer 1
-[1] receive entries(53 - 81) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 81 to peer 2
-[1] conflict_index 81 self.commit_index 51
-[4] send entries from 2 to 81 to peer 3
-[4] start command of index 82 and term 2
-[4] send entries from 52 to 82 to peer 0
-[4] send entries from 53 to 82 to peer 1
-[1] receive entries(53 - 82) from [4] with term 2 and commit index 51
-[1] conflict_index 82 self.commit_index 51
-[4] send entries from 2 to 82 to peer 2
-[4] send entries from 2 to 82 to peer 3
-[4] start command of index 83 and term 2
-[4] send entries from 52 to 83 to peer 0
-[4] send entries from 53 to 83 to peer 1
-[1] receive entries(53 - 83) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 83 to peer 2
-[1] conflict_index 83 self.commit_index 51
-[4] send entries from 2 to 83 to peer 3
-[4] start command of index 84 and term 2
-[4] send entries from 52 to 84 to peer 0
-[4] send entries from 53 to 84 to peer 1
-[1] receive entries(53 - 84) from [4] with term 2 and commit index 51
-[1] conflict_index 84 self.commit_index 51
-[4] send entries from 2 to 84 to peer 2
-[4] send entries from 2 to 84 to peer 3
-[4] start command of index 85 and term 2
-[4] send entries from 52 to 85 to peer 0
-[4] send entries from 53 to 85 to peer 1
-[1] receive entries(53 - 85) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 85 to peer 2
-[1] conflict_index 85 self.commit_index 51
-[4] send entries from 2 to 85 to peer 3
-[4] start command of index 86 and term 2
-[4] send entries from 52 to 86 to peer 0
-[4] send entries from 53 to 86 to peer 1
-[1] receive entries(53 - 86) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 86 to peer 2
-[1] conflict_index 86 self.commit_index 51
-[4] send entries from 2 to 86 to peer 3
-[4] start command of index 87 and term 2
-[4] send entries from 52 to 87 to peer 0
-[4] send entries from 53 to 87 to peer 1
-[1] receive entries(53 - 87) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 87 to peer 2
-[1] conflict_index 87 self.commit_index 51
-[4] send entries from 2 to 87 to peer 3
-[4] start command of index 88 and term 2
-[4] send entries from 52 to 88 to peer 0
-[4] send entries from 53 to 88 to peer 1
-[1] receive entries(53 - 88) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 88 to peer 2
-[1] conflict_index 88 self.commit_index 51
-[4] send entries from 2 to 88 to peer 3
-[4] start command of index 89 and term 2
-[4] send entries from 52 to 89 to peer 0
-[4] send entries from 53 to 89 to peer 1
-[1] receive entries(53 - 89) from [4] with term 2 and commit index 51
-[1] conflict_index 89 self.commit_index 51
-[4] send entries from 2 to 89 to peer 2
-[4] send entries from 2 to 89 to peer 3
-[4] start command of index 90 and term 2
-[4] send entries from 52 to 90 to peer 0
-[4] send entries from 53 to 90 to peer 1
-[1] receive entries(53 - 90) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 90 to peer 2
-[1] conflict_index 90 self.commit_index 51
-[4] send entries from 2 to 90 to peer 3
-[4] start command of index 91 and term 2
-[4] send entries from 52 to 91 to peer 0
-[4] send entries from 53 to 91 to peer 1
-[1] receive entries(53 - 91) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 91 to peer 2
-[1] conflict_index 91 self.commit_index 51
-[4] send entries from 2 to 91 to peer 3
-[4] start command of index 92 and term 2
-[4] send entries from 52 to 92 to peer 0
-[4] send entries from 53 to 92 to peer 1
-[1] receive entries(53 - 92) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 92 to peer 2
-[1] conflict_index 92 self.commit_index 51
-[4] send entries from 2 to 92 to peer 3
-[4] start command of index 93 and term 2
-[4] send entries from 52 to 93 to peer 0
-[4] send entries from 53 to 93 to peer 1
-[1] receive entries(53 - 93) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 93 to peer 2
-[1] conflict_index 93 self.commit_index 51
-[4] send entries from 2 to 93 to peer 3
-[4] start command of index 94 and term 2
-[4] send entries from 52 to 94 to peer 0
-[4] send entries from 53 to 94 to peer 1
-[1] receive entries(53 - 94) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 94 to peer 2
-[1] conflict_index 94 self.commit_index 51
-[4] send entries from 2 to 94 to peer 3
-[4] start command of index 95 and term 2
-[4] send entries from 52 to 95 to peer 0
-[4] send entries from 53 to 95 to peer 1
-[4] send entries from 2 to 95 to peer 2
-[1] receive entries(53 - 95) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 95 to peer 3
-[1] conflict_index 95 self.commit_index 51
-[4] start command of index 96 and term 2
-[4] send entries from 52 to 96 to peer 0
-[4] send entries from 53 to 96 to peer 1
-[1] receive entries(53 - 96) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 96 to peer 2
-[1] conflict_index 96 self.commit_index 51
-[4] send entries from 2 to 96 to peer 3
-[4] start command of index 97 and term 2
-[4] send entries from 52 to 97 to peer 0
-[4] send entries from 53 to 97 to peer 1
-[1] receive entries(53 - 97) from [4] with term 2 and commit index 51
-[1] conflict_index 97 self.commit_index 51
-[4] send entries from 2 to 97 to peer 2
-[4] send entries from 2 to 97 to peer 3
-[4] start command of index 98 and term 2
-[4] send entries from 52 to 98 to peer 0
-[4] send entries from 56 to 98 to peer 1
-[1] receive entries(56 - 98) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 98 to peer 2
-[1] conflict_index 98 self.commit_index 51
-[4] send entries from 2 to 98 to peer 3
-[4] start command of index 99 and term 2
-[4] send entries from 52 to 99 to peer 0
-[4] send entries from 56 to 99 to peer 1
-[1] receive entries(56 - 99) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 99 to peer 2
-[1] conflict_index 99 self.commit_index 51
-[4] send entries from 2 to 99 to peer 3
-[4] start command of index 100 and term 2
-[4] send entries from 52 to 100 to peer 0
-[4] send entries from 56 to 100 to peer 1
-[1] receive entries(56 - 100) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 100 to peer 2
-[1] conflict_index 100 self.commit_index 51
-[4] send entries from 2 to 100 to peer 3
-[4] start command of index 101 and term 2
-[4] send entries from 52 to 101 to peer 0
-[4] send entries from 56 to 101 to peer 1
-[1] receive entries(56 - 101) from [4] with term 2 and commit index 51
-[4] send entries from 2 to 101 to peer 2
-[4] send entries from 2 to 101 to peer 3
-[1] conflict_index 101 self.commit_index 51
-[1] becomes follower at term 2
-[1] becomes follower at term 2
-[1] becomes follower at term 2
+[0] becomes candidate at term 1
+[1] grant vote for 0 at term 0
+[1] becomes follower at term 1
+[2] grant vote for 0 at term 0
+[2] becomes follower at term 1
+[0] received vote from 1 at term 1
+[0] becomes leader at term 1
+[2] becomes follower at term 1
+[1] becomes follower at term 1
+[2] becomes follower at term 1
+[1] becomes follower at term 1
+[2] becomes follower at term 1
+[1] becomes follower at term 1
+[0] start command of index 1 and term 1
+[0] send entries from 1 to 1 to peer 1
+[0] send entries from 1 to 1 to peer 2
+[0] start command of index 2 and term 1
+[0] send entries from 1 to 2 to peer 1
+[0] send entries from 1 to 2 to peer 2
+[0] start command of index 3 and term 1
+[1] receive entries(1 - 1) from [0] with term 1 and commit index 0
+[1] conflict_index 1 self.commit_index 0
+[2] receive entries(1 - 1) from [0] with term 1 and commit index 0
+[2] conflict_index 1 self.commit_index 0
+[0] send entries from 1 to 3 to peer 1
+[0] send entries from 1 to 3 to peer 2
+[1] receive entries(1 - 2) from [0] with term 1 and commit index 0
+[1] conflict_index 2 self.commit_index 0
+[2] receive entries(1 - 2) from [0] with term 1 and commit index 0
+[2] conflict_index 2 self.commit_index 0
+[0] start command of index 4 and term 1
+[0] send entries from 1 to 4 to peer 1
+[0] send entries from 1 to 4 to peer 2
+[1] receive entries(1 - 3) from [0] with term 1 and commit index 0
+[0] start command of index 5 and term 1
+[1] conflict_index 3 self.commit_index 0
+[2] receive entries(1 - 3) from [0] with term 1 and commit index 0
+[2] conflict_index 3 self.commit_index 0
+[0] send entries from 1 to 5 to peer 1
+[0] send entries from 1 to 5 to peer 2
+[0] start command of index 6 and term 1
+[2] receive entries(1 - 4) from [0] with term 1 and commit index 0
+[2] conflict_index 4 self.commit_index 0
+[0] send entries from 1 to 6 to peer 1
+[1] receive entries(1 - 4) from [0] with term 1 and commit index 0
+[1] conflict_index 4 self.commit_index 0
+[0] send entries from 1 to 6 to peer 2
+[1] receive entries(1 - 5) from [0] with term 1 and commit index 0
+[1] conflict_index 5 self.commit_index 0
+[0] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 1] }
+[2] receive entries(1 - 5) from [0] with term 1 and commit index 0
+[2] conflict_index 5 self.commit_index 0
+[1] receive entries(1 - 6) from [0] with term 1 and commit index 0
+[1] conflict_index 6 self.commit_index 0
+[2] receive entries(1 - 6) from [0] with term 1 and commit index 0
+[2] conflict_index 6 self.commit_index 0
+[0] update commit index to 2 with ent Entry { term: 1, index: 2, data: [160, 6, 100] }
+thread '<unnamed>' panicked at 'Something here wrong', raft\src\raft\raft.rs:355:13
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:379:38
+thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:77:39
+thread 'raft::tests::test_concurrent_starts_2b' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\node.rs:97:26
+
+---- raft::tests::test_count_2b stdout ----
 disconnect(0)
 disconnect(1)
 disconnect(2)
-disconnect(3)
-disconnect(4)
-connect(2)
-connect(3)
 connect(0)
-[2] start command of index 52 and term 1
-[2] send entries from 2 to 52 to peer 0
-[2] send entries from 2 to 52 to peer 1
-[0] receive entries(2 - 52) from [2] with term 1 and commit index 1
-[2] send entries from 52 to 52 to peer 3
-[3] receive entries(52 - 52) from [2] with term 1 and commit index 1
-[2] send entries from 2 to 52 to peer 4
-[2] becomes follower at term 2
-[3] becomes candidate at term 7
-Voter's log (term 1, index 51) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 3 at term 2
-[0] becomes follower at term 7
-Voter's log (term 1, index 51) is not update to date than votee's log (term 1, index 52)
-[2] reject vote for 3 at term 2
-[2] becomes follower at term 7
-[3] received vote from 0 at term 7
-[3] received vote from 2 at term 7
-[3] becomes follower at term 7
-[1] becomes candidate at term 3
-[2] becomes candidate at term 8
-Voter's log (term 1, index 52) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 2 at term 7
-[3] grant vote for 2 at term 7
-[3] becomes follower at term 8
-[0] becomes follower at term 8
-[2] received vote from 3 at term 8
-[2] received vote from 0 at term 8
-[1] becomes follower at term 3
-[2] becomes follower at term 8
-[3] becomes candidate at term 9
-Voter's log (term 1, index 51) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 3 at term 8
-[0] becomes follower at term 9
-Voter's log (term 1, index 51) is not update to date than votee's log (term 1, index 52)
-[2] reject vote for 3 at term 8
-[2] becomes follower at term 9
-[3] received vote from 0 at term 9
-[3] received vote from 2 at term 9
-[1] becomes candidate at term 4
-[3] becomes follower at term 9
-[2] becomes candidate at term 10
-Voter's log (term 1, index 52) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 2 at term 9
-[0] becomes follower at term 10
-[3] grant vote for 2 at term 9
-[3] becomes follower at term 10
-[2] received vote from 0 at term 10
-[2] received vote from 3 at term 10
-[1] becomes follower at term 4
-[2] becomes follower at term 10
-[3] becomes candidate at term 11
-Voter's log (term 1, index 51) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 3 at term 10
-[0] becomes follower at term 11
-Voter's log (term 1, index 51) is not update to date than votee's log (term 1, index 52)
-[2] reject vote for 3 at term 10
-[2] becomes follower at term 11
-[3] received vote from 0 at term 11
-[3] received vote from 2 at term 11
-[1] becomes candidate at term 5
-[3] becomes follower at term 11
-[2] becomes candidate at term 12
-Voter's log (term 1, index 52) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 2 at term 11
-[0] becomes follower at term 12
-[3] grant vote for 2 at term 11
-[3] becomes follower at term 12
-[2] received vote from 0 at term 12
-[2] received vote from 3 at term 12
-[1] becomes follower at term 5
-[3] becomes candidate at term 13
-Voter's log (term 1, index 51) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 3 at term 12
-[0] becomes follower at term 13
-Voter's log (term 1, index 51) is not update to date than votee's log (term 1, index 52)
-[2] reject vote for 3 at term 12
-[2] becomes follower at term 13
-[3] received vote from 0 at term 13
-[3] received vote from 2 at term 13
-[2] becomes follower at term 13
-[1] becomes candidate at term 6
-[3] becomes follower at term 13
-[1] becomes follower at term 6
-[2] becomes candidate at term 14
-Voter's log (term 1, index 52) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 2 at term 13
-[3] grant vote for 2 at term 13
-[3] becomes follower at term 14
-[0] becomes follower at term 14
-[2] received vote from 3 at term 14
-[2] received vote from 0 at term 14
-[2] becomes follower at term 14
-[1] becomes candidate at term 7
-[3] becomes candidate at term 15
-Voter's log (term 1, index 51) is not update to date than votee's log (term 2, index 51)
-[0] reject vote for 3 at term 14
-[0] becomes follower at term 15
-Voter's log (term 1, index 51) is not update to date than votee's log (term 1, index 52)
-[2] reject vote for 3 at term 14
-[2] becomes follower at term 15
-[3] received vote from 0 at term 15
-[3] received vote from 2 at term 15
-thread 'raft::tests::test_backup_2b' panicked at 'one(Entry { x: 15670473646791153381 }) failed to reach agreement', raft\src\raft\config.rs:330:9
-stack backtrace:
-   0: std::panicking::begin_panic_handler
-             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rs:515
-   1: std::panicking::begin_panic_fmt
-             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rs:457
-   2: raft::raft::config::Config::one
-             at .\src\raft\config.rs:330
-   3: raft::raft::tests::test_backup_2b
-             at .\src\raft\tests.rs:440
+connect(1)
+connect(2)
+
+[2] becomes candidate at term 1
+[0] grant vote for 2 at term 0
+[0] becomes follower at term 1
+[1] grant vote for 2 at term 0
+[1] becomes follower at term 1
+[2] received vote from 0 at term 1
+[2] becomes leader at term 1
+[1] becomes follower at term 1
+[0] becomes follower at term 1
+[0] becomes follower at term 1
+[1] becomes follower at term 1
+[0] becomes follower at term 1
+[1] becomes follower at term 1
+[0] becomes follower at term 1
+[1] becomes follower at term 1
+[1] becomes follower at term 1
+[0] becomes follower at term 1
+[1] becomes follower at term 1
+[0] becomes follower at term 1
+[0] becomes follower at term 1
+[1] becomes follower at term 1
+[2] start command of index 1 and term 1
+[2] send entries from 1 to 1 to peer 0
+[2] send entries from 1 to 1 to peer 1
+[2] start command of index 2 and term 1
+[2] send entries from 1 to 2 to peer 0
+[2] send entries from 1 to 2 to peer 1
+[2] start command of index 3 and term 1
+[2] send entries from 1 to 3 to peer 0
+[2] send entries from 1 to 3 to peer 1
+[2] start command of index 4 and term 1
+[2] send entries from 1 to 4 to peer 0
+[0] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[0] conflict_index 1 self.commit_index 0
+[1] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[1] conflict_index 1 self.commit_index 0
+[2] send entries from 1 to 4 to peer 1
+[1] receive entries(1 - 2) from [2] with term 1 and commit index 0
+[1] conflict_index 2 self.commit_index 0
+[0] receive entries(1 - 2) from [2] with term 1 and commit index 0
+[0] conflict_index 2 self.commit_index 0
+[2] start command of index 5 and term 1
+[0] receive entries(1 - 3) from [2] with term 1 and commit index 0
+[2] send entries from 1 to 5 to peer 0
+[0] conflict_index 3 self.commit_index 0
+[1] receive entries(1 - 3) from [2] with term 1 and commit index 0
+[1] conflict_index 3 self.commit_index 0
+[2] send entries from 1 to 5 to peer 1
+[0] receive entries(1 - 4) from [2] with term 1 and commit index 0
+[0] conflict_index 4 self.commit_index 0
+[2] start command of index 6 and term 1
+[1] receive entries(1 - 4) from [2] with term 1 and commit index 0
+[1] conflict_index 4 self.commit_index 0
+[2] send entries from 1 to 6 to peer 0
+[0] receive entries(1 - 5) from [2] with term 1 and commit index 0
+[1] receive entries(1 - 5) from [2] with term 1 and commit index 0
+[0] conflict_index 5 self.commit_index 0
+[1] conflict_index 5 self.commit_index 0
+[2] send entries from 1 to 6 to peer 1
+[2] start command of index 7 and term 1
+[2] send entries from 1 to 7 to peer 0
+[2] send entries from 1 to 7 to peer 1
+[0] receive entries(1 - 6) from [2] with term 1 and commit index 0
+[0] conflict_index 6 self.commit_index 0
+[1] receive entries(1 - 6) from [2] with term 1 and commit index 0
+[1] conflict_index 6 self.commit_index 0
+[2] start command of index 8 and term 1
+[2] send entries from 1 to 8 to peer 0
+[0] receive entries(1 - 7) from [2] with term 1 and commit index 0
+[0] conflict_index 7 self.commit_index 0
+[1] receive entries(1 - 7) from [2] with term 1 and commit index 0
+[1] conflict_index 7 self.commit_index 0
+[2] send entries from 1 to 8 to peer 1
+[2] start command of index 9 and term 1
+[2] send entries from 1 to 9 to peer 0
+[0] receive entries(1 - 8) from [2] with term 1 and commit index 0
+[2] send entries from 1 to 9 to peer 1
+[0] conflict_index 8 self.commit_index 0
+[2] start command of index 10 and term 1
+[2] send entries from 1 to 10 to peer 0
+[1] receive entries(1 - 8) from [2] with term 1 and commit index 0
+[1] conflict_index 8 self.commit_index 0
+[2] send entries from 1 to 10 to peer 1
+[2] start command of index 11 and term 1
+[2] send entries from 1 to 11 to peer 0
+[0] receive entries(1 - 9) from [2] with term 1 and commit index 0
+[0] conflict_index 9 self.commit_index 0
+[2] send entries from 1 to 11 to peer 1
+[1] receive entries(1 - 9) from [2] with term 1 and commit index 0
+[1] conflict_index 9 self.commit_index 0
+[2] start command of index 12 and term 1
+[0] receive entries(1 - 10) from [2] with term 1 and commit index 0
+[0] conflict_index 10 self.commit_index 0
+[2] send entries from 1 to 12 to peer 0
+[1] receive entries(1 - 10) from [2] with term 1 and commit index 0
+[1] conflict_index 10 self.commit_index 0
+[2] send entries from 1 to 12 to peer 1
+[0] receive entries(1 - 11) from [2] with term 1 and commit index 0
+[0] conflict_index 11 self.commit_index 0
+[2] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 1] }
+[1] receive entries(1 - 11) from [2] with term 1 and commit index 0
+[1] conflict_index 11 self.commit_index 0
+[0] receive entries(1 - 12) from [2] with term 1 and commit index 0
+[0] conflict_index 12 self.commit_index 0
+[2] update commit index to 2 with ent Entry { term: 1, index: 2, data: [160, 6, 206, 163, 153, 182, 150, 222, 237, 129, 19] }
+thread '<unnamed>' panicked at 'Something here wrong', raft\src\raft\raft.rs:355:13
+[1] receive entries(1 - 12) from [2] with term 1 and commit index 0
+[1] conflict_index 12 self.commit_index 0
+thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:379:38
+thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:77:39
+thread 'raft::tests::test_count_2b' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\node.rs:97:26
+

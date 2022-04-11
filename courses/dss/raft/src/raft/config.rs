@@ -360,8 +360,10 @@ impl Config {
         let s = self.storage.lock().unwrap();
         let ncmds = s.max_index - s.max_index0;
 
-        info!("  ... Passed --");
-        info!("  {:?}  {} {} {}", t, npeers, nrpc, ncmds);
+        // info!("  ... Passed --");
+        // info!("  {:?}  {} {} {}", t, npeers, nrpc, ncmds);
+        println!("  ... Passed --");
+        println!("  {:?}  {} {} {}", t, npeers, nrpc, ncmds);
     }
 
     /// start or re-start a Raft.
