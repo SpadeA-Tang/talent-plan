@@ -3,7 +3,7 @@ use super::raft::Entry;
 pub struct RaftLog {
     pub commit_idx: u64,
     pub apply_idx: u64,
-    entries: Vec<Entry>,
+    pub entries: Vec<Entry>,
 
     last_index_in_snapshot: u64,
 }

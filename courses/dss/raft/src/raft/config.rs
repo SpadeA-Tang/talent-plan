@@ -28,6 +28,7 @@ pub struct Entry {
     pub x: u64,
 }
 
+
 pub struct Storage {
     // copy of each server's committed entries
     logs: Vec<HashMap<u64, Entry>>,

@@ -60,7 +60,7 @@ impl Node {
         let _worker = thread::Builder::new()
             .name(format!("HandleaAEResp-{}", id))
             .spawn(move || {
-                handle_append_resp(rf3, rx2);
+                handle_resp_worker(rf3, rx2);
             })
             .unwrap();
         // workers.push(worker);
@@ -193,8 +193,7 @@ impl RaftService for Node {
     }
 
     async fn heartbeat(&self, args: HeartbeatArgs) -> labrpc::Result<HeartbeatReply> {
-        self.raft.lock().unwrap().handle_heartbeat(args);
-        Ok(HeartbeatReply {})
+        Ok(self.raft.lock().unwrap().handle_heartbeat(args))
     }
 
     async fn append_entries(&self, args: AppendEntryArgs) -> labrpc::Result<AppendEntryReply> {

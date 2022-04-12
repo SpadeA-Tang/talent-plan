@@ -1,183 +1,132 @@
-[0] becomes candidate at term 1
-[1] grant vote for 0 at term 0
-[1] becomes follower at term 1
-[2] grant vote for 0 at term 0
+1] becomes candidate at term 1
+[2] grant vote for 1 at term 0
 [2] becomes follower at term 1
-[0] received vote from 1 at term 1
-[0] becomes leader at term 1
+[1] received vote from 2 at term 1
+[1] becomes leader at term 1
+[0] grant vote for 1 at term 0
+[0] becomes follower at term 1
 [2] becomes follower at term 1
-[1] becomes follower at term 1
-[2] becomes follower at term 1
-[1] becomes follower at term 1
-[2] becomes follower at term 1
-[1] becomes follower at term 1
-[0] start command of index 1 and term 1
-[0] send entries from 1 to 1 to peer 1
-[0] send entries from 1 to 1 to peer 2
-[0] start command of index 2 and term 1
-[0] send entries from 1 to 2 to peer 1
-[0] send entries from 1 to 2 to peer 2
-[0] start command of index 3 and term 1
-[1] receive entries(1 - 1) from [0] with term 1 and commit index 0
-[1] conflict_index 1 self.commit_index 0
-[2] receive entries(1 - 1) from [0] with term 1 and commit index 0
-[2] conflict_index 1 self.commit_index 0
-[0] send entries from 1 to 3 to peer 1
-[0] send entries from 1 to 3 to peer 2
-[1] receive entries(1 - 2) from [0] with term 1 and commit index 0
-[1] conflict_index 2 self.commit_index 0
-[2] receive entries(1 - 2) from [0] with term 1 and commit index 0
-[2] conflict_index 2 self.commit_index 0
-[0] start command of index 4 and term 1
-[0] send entries from 1 to 4 to peer 1
-[0] send entries from 1 to 4 to peer 2
-[1] receive entries(1 - 3) from [0] with term 1 and commit index 0
-[0] start command of index 5 and term 1
-[1] conflict_index 3 self.commit_index 0
-[2] receive entries(1 - 3) from [0] with term 1 and commit index 0
-[2] conflict_index 3 self.commit_index 0
-[0] send entries from 1 to 5 to peer 1
-[0] send entries from 1 to 5 to peer 2
-[0] start command of index 6 and term 1
-[2] receive entries(1 - 4) from [0] with term 1 and commit index 0
-[2] conflict_index 4 self.commit_index 0
-[0] send entries from 1 to 6 to peer 1
-[1] receive entries(1 - 4) from [0] with term 1 and commit index 0
-[1] conflict_index 4 self.commit_index 0
-[0] send entries from 1 to 6 to peer 2
-[1] receive entries(1 - 5) from [0] with term 1 and commit index 0
-[1] conflict_index 5 self.commit_index 0
-[0] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 1] }
-[2] receive entries(1 - 5) from [0] with term 1 and commit index 0
-[2] conflict_index 5 self.commit_index 0
-[1] receive entries(1 - 6) from [0] with term 1 and commit index 0
-[1] conflict_index 6 self.commit_index 0
-[2] receive entries(1 - 6) from [0] with term 1 and commit index 0
-[2] conflict_index 6 self.commit_index 0
-[0] update commit index to 2 with ent Entry { term: 1, index: 2, data: [160, 6, 100] }
-thread '<unnamed>' panicked at 'Something here wrong', raft\src\raft\raft.rs:355:13
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:379:38
-thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:77:39
-thread 'raft::tests::test_concurrent_starts_2b' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\node.rs:97:26
-
----- raft::tests::test_count_2b stdout ----
-disconnect(0)
-disconnect(1)
-disconnect(2)
-connect(0)
-connect(1)
-connect(2)
-
-[2] becomes candidate at term 1
-[0] grant vote for 2 at term 0
 [0] becomes follower at term 1
-[1] grant vote for 2 at term 0
-[1] becomes follower at term 1
-[2] received vote from 0 at term 1
-[2] becomes leader at term 1
-[1] becomes follower at term 1
-[0] becomes follower at term 1
-[0] becomes follower at term 1
-[1] becomes follower at term 1
-[0] becomes follower at term 1
-[1] becomes follower at term 1
-[0] becomes follower at term 1
-[1] becomes follower at term 1
-[1] becomes follower at term 1
-[0] becomes follower at term 1
-[1] becomes follower at term 1
-[0] becomes follower at term 1
-[0] becomes follower at term 1
-[1] becomes follower at term 1
-[2] start command of index 1 and term 1
-[2] send entries from 1 to 1 to peer 0
-[2] send entries from 1 to 1 to peer 1
-[2] start command of index 2 and term 1
-[2] send entries from 1 to 2 to peer 0
-[2] send entries from 1 to 2 to peer 1
-[2] start command of index 3 and term 1
-[2] send entries from 1 to 3 to peer 0
-[2] send entries from 1 to 3 to peer 1
-[2] start command of index 4 and term 1
-[2] send entries from 1 to 4 to peer 0
-[0] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[1] start command of index 1 and term 1
+[1] send entries from 1 to 1 to peer 0
+[1] send entries from 1 to 1 to peer 2
+[0] receive entries(1 - 1) from [1] with term 1 and commit index 0
 [0] conflict_index 1 self.commit_index 0
-[1] receive entries(1 - 1) from [2] with term 1 and commit index 0
-[1] conflict_index 1 self.commit_index 0
-[2] send entries from 1 to 4 to peer 1
-[1] receive entries(1 - 2) from [2] with term 1 and commit index 0
-[1] conflict_index 2 self.commit_index 0
-[0] receive entries(1 - 2) from [2] with term 1 and commit index 0
+[2] receive entries(1 - 1) from [1] with term 1 and commit index 0
+[2] conflict_index 1 self.commit_index 0
+[1] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 11] }
+[0] becomes follower at term 1
+[2] becomes follower at term 1
+disconnect(0)
+[0] apply worker exit
+[0] handle_append_resp exit
+[0] background worker exit
+[0] kill finish
+disconnect(1)
+[1] handle_append_resp exit
+[1] apply worker exit
+[1] background worker exit
+[1] kill finish
+disconnect(2)
+[2] handle_append_resp exit
+[2] apply worker exit
+[2] background worker exit
+[2] kill finish
+disconnect(0)
+connect(0)
+disconnect(1)
+connect(1)
+disconnect(2)
+connect(2)
+[1] becomes candidate at term 2
+[0] grant vote for 1 at term 1
+[0] becomes follower at term 2
+[2] grant vote for 1 at term 1
+[2] becomes follower at term 2
+[1] received vote from 0 at term 2
+[1] becomes leader at term 2
+[1] start command of index 2 and term 2
+[1] send entries from 2 to 2 to peer 0
+[1] send entries from 2 to 2 to peer 2
+[0] receive entries(2 - 2) from [1] with term 2 and commit index 0
 [0] conflict_index 2 self.commit_index 0
-[2] start command of index 5 and term 1
-[0] receive entries(1 - 3) from [2] with term 1 and commit index 0
-[2] send entries from 1 to 5 to peer 0
-[0] conflict_index 3 self.commit_index 0
-[1] receive entries(1 - 3) from [2] with term 1 and commit index 0
-[1] conflict_index 3 self.commit_index 0
-[2] send entries from 1 to 5 to peer 1
-[0] receive entries(1 - 4) from [2] with term 1 and commit index 0
-[0] conflict_index 4 self.commit_index 0
-[2] start command of index 6 and term 1
-[1] receive entries(1 - 4) from [2] with term 1 and commit index 0
-[1] conflict_index 4 self.commit_index 0
-[2] send entries from 1 to 6 to peer 0
-[0] receive entries(1 - 5) from [2] with term 1 and commit index 0
-[1] receive entries(1 - 5) from [2] with term 1 and commit index 0
-[0] conflict_index 5 self.commit_index 0
-[1] conflict_index 5 self.commit_index 0
-[2] send entries from 1 to 6 to peer 1
-[2] start command of index 7 and term 1
-[2] send entries from 1 to 7 to peer 0
-[2] send entries from 1 to 7 to peer 1
-[0] receive entries(1 - 6) from [2] with term 1 and commit index 0
-[0] conflict_index 6 self.commit_index 0
-[1] receive entries(1 - 6) from [2] with term 1 and commit index 0
-[1] conflict_index 6 self.commit_index 0
-[2] start command of index 8 and term 1
-[2] send entries from 1 to 8 to peer 0
-[0] receive entries(1 - 7) from [2] with term 1 and commit index 0
-[0] conflict_index 7 self.commit_index 0
-[1] receive entries(1 - 7) from [2] with term 1 and commit index 0
-[1] conflict_index 7 self.commit_index 0
-[2] send entries from 1 to 8 to peer 1
-[2] start command of index 9 and term 1
-[2] send entries from 1 to 9 to peer 0
-[0] receive entries(1 - 8) from [2] with term 1 and commit index 0
-[2] send entries from 1 to 9 to peer 1
-[0] conflict_index 8 self.commit_index 0
-[2] start command of index 10 and term 1
-[2] send entries from 1 to 10 to peer 0
-[1] receive entries(1 - 8) from [2] with term 1 and commit index 0
-[1] conflict_index 8 self.commit_index 0
-[2] send entries from 1 to 10 to peer 1
-[2] start command of index 11 and term 1
-[2] send entries from 1 to 11 to peer 0
-[0] receive entries(1 - 9) from [2] with term 1 and commit index 0
-[0] conflict_index 9 self.commit_index 0
-[2] send entries from 1 to 11 to peer 1
-[1] receive entries(1 - 9) from [2] with term 1 and commit index 0
-[1] conflict_index 9 self.commit_index 0
-[2] start command of index 12 and term 1
-[0] receive entries(1 - 10) from [2] with term 1 and commit index 0
-[0] conflict_index 10 self.commit_index 0
-[2] send entries from 1 to 12 to peer 0
-[1] receive entries(1 - 10) from [2] with term 1 and commit index 0
-[1] conflict_index 10 self.commit_index 0
-[2] send entries from 1 to 12 to peer 1
-[0] receive entries(1 - 11) from [2] with term 1 and commit index 0
-[0] conflict_index 11 self.commit_index 0
-[2] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 1] }
-[1] receive entries(1 - 11) from [2] with term 1 and commit index 0
-[1] conflict_index 11 self.commit_index 0
-[0] receive entries(1 - 12) from [2] with term 1 and commit index 0
-[0] conflict_index 12 self.commit_index 0
-[2] update commit index to 2 with ent Entry { term: 1, index: 2, data: [160, 6, 206, 163, 153, 182, 150, 222, 237, 129, 19] }
-thread '<unnamed>' panicked at 'Something here wrong', raft\src\raft\raft.rs:355:13
-[1] receive entries(1 - 12) from [2] with term 1 and commit index 0
-[1] conflict_index 12 self.commit_index 0
-thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:379:38
-thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\raft.rs:77:39
-thread 'raft::tests::test_count_2b' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\node.rs:97:26
-
+[2] receive entries(2 - 2) from [1] with term 2 and commit index 0
+[2] conflict_index 2 self.commit_index 0
+[1] update commit index to 2 with ent Entry { term: 2, index: 2, data: [160, 6, 12] }
+[2] becomes follower at term 2
+[0] becomes follower at term 2
+[0] becomes follower at term 2
+[2] becomes follower at term 2
+[0] becomes follower at term 2
+[2] becomes follower at term 2
+[0] becomes follower at term 2
+[2] becomes follower at term 2
+[0] becomes follower at term 2
+[2] becomes follower at term 2
+disconnect(1)
+disconnect(1)
+[1] handle_append_resp exit
+[1] apply worker exit
+[1] background worker exit
+[1] kill finish
+connect(1)
+[1] becomes candidate at term 3
+[0] grant vote for 1 at term 2
+[0] becomes follower at term 3
+[2] grant vote for 1 at term 2
+[2] becomes follower at term 3
+[1] received vote from 0 at term 3
+[1] becomes leader at term 3
+[0] becomes follower at term 3
+[2] becomes follower at term 3
+[1] start command of index 3 and term 3
+[1] send entries from 3 to 3 to peer 0
+[1] send entries from 3 to 3 to peer 2
+[0] receive entries(3 - 3) from [1] with term 3 and commit index 0
+[2] receive entries(3 - 3) from [1] with term 3 and commit index 0
+[2] conflict_index 3 self.commit_index 2
+[0] conflict_index 3 self.commit_index 2
+[1] update commit index to 3 with ent Entry { term: 3, index: 3, data: [160, 6, 13] }
+[0] becomes follower at term 3
+[2] becomes follower at term 3
+[0] becomes follower at term 3
+[2] becomes follower at term 3
+[0] becomes follower at term 3
+[2] becomes follower at term 3
+[2] becomes follower at term 3
+[0] becomes follower at term 3
+[0] becomes follower at term 3
+[2] becomes follower at term 3
+[0] becomes follower at term 3
+[2] becomes follower at term 3
+disconnect(1)
+[0] becomes candidate at term 4
+[2] grant vote for 0 at term 3
+[2] becomes follower at term 4
+[0] received vote from 2 at term 4
+[0] becomes leader at term 4
+[2] becomes follower at term 4
+[0] start command of index 4 and term 4
+[0] send entries from 4 to 4 to peer 1
+[0] send entries from 4 to 4 to peer 2
+[2] receive entries(4 - 4) from [0] with term 4 and commit index 3
+[2] conflict_index 4 self.commit_index 3
+[0] update commit index to 4 with ent Entry { term: 4, index: 4, data: [160, 6, 14] }
+[2] becomes follower at term 4
+disconnect(1)
+[1] handle_append_resp exit
+[1] apply worker exit
+[1] background worker exit
+[1] kill finish
+connect(1)
+test raft::tests::test_persist1_2c has been running for over 60 seconds
+[1] becomes follower at term 4
+[2] becomes follower at term 4
+[2] becomes follower at term 4
+[1] becomes follower at term 4
+[2] becomes follower at term 4
+[1] becomes follower at term 4
+[2] becomes follower at term 4
+[1] becomes follower at term 4
+[1] becomes follower at term 4
+[2] becomes follower at term 4

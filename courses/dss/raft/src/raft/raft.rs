@@ -4,6 +4,7 @@ use futures::select;
 use futures::SinkExt;
 use futures::StreamExt;
 use rand::{self, Rng};
+use std::net::Shutdown;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -98,14 +99,14 @@ pub struct Raft {
     election_elapsed: u64,
     heartbeat_elapsed: u64,
     heatbeat_timeout: u64,
+    heartbeat_round: u64,
     election_timeout: u64,
     randomized_election_timeout: u64,
 
     prs: ProgressTracker,
 
     raft_log: RaftLog,
-    // vote_router: Router<RequestVoteReply>,
-    pub append_entries_router: Router<AppendEntryReply>,
+    pub append_entries_router: Router<Reply>,
     // msgs: Vec<Msg>,
     apply_ch: UnboundedSender<ApplyMsg>,
     pub apply_flag_router: ApplyFlagRouter,
@@ -171,6 +172,7 @@ impl Raft {
             leader: None,
             election_elapsed: 0,
             heartbeat_elapsed: 0,
+            heartbeat_round: 0,
             randomized_election_timeout: gen_randomized_timeout(),
             election_timeout: ELECTION_TIMEOUT,
             heatbeat_timeout: HEARTBEAT_TIMEOUT,
@@ -190,7 +192,6 @@ impl Raft {
         // initialize from state persisted before a crash
         rf.restore(&raft_state);
 
-        // crate::your_code_here((rf, apply_ch))
         rf
     }
 
@@ -201,17 +202,12 @@ impl Raft {
         futures::executor::block_on(async {
             self.append_entries_router
                 .tx
-                .send(AppendEntryReply {
-                    id: 0,
-                    index: 0,
-                    success: false,
-                    term: 0,
-                })
-                .await.unwrap();
+                .send(Reply::Shutdown)
+                .await
+                .unwrap();
         });
 
         self.apply_flag_router.send(ApplyFlag::Shutdown).unwrap();
-
     }
 
     // First, I will implement naive rejection which means when leader discovers that the folower does not have a
@@ -288,6 +284,7 @@ impl Raft {
             let begin_index = (conflict_index - (arg.lastlog_index + 1)) as usize;
 
             self.raft_log.append_entries(&arg.entries[begin_index..]);
+            self.persist();
         }
         if self.raft_log.commit(arg.commit_index) {
             if PRINT_APPEND {
@@ -330,6 +327,26 @@ impl Raft {
         }
     }
 
+    pub fn handle_hb_resp(&mut self, resp: HeartbeatReply) {
+        if self.state != RaftState::Leader {
+            return;
+        }
+
+        if resp.term > self.term {
+            self.become_follower(resp.term, None);
+            return;
+        }
+
+        if self.heartbeat_round > 5 {
+            self.heartbeat_round = 0;
+            let pr = self.prs.progress_map.get(&(resp.id as usize)).unwrap();
+            if pr.matched_index < self.raft_log.last_index() {
+                let tx = &self.append_entries_router.tx;
+                self.send_append(resp.id as usize, tx.clone());
+            }
+        }
+    }
+
     fn may_commit_and_apply(&mut self) {
         let index = self.prs.get_commit_index();
 
@@ -351,12 +368,16 @@ impl Raft {
     }
 
     // todo : handle commit index
-    pub fn handle_heartbeat(&mut self, arg: HeartbeatArgs) {
+    pub fn handle_heartbeat(&mut self, arg: HeartbeatArgs) -> HeartbeatReply {
         if arg.term >= self.term {
             self.become_follower(arg.term, Some(arg.id as usize));
             if self.raft_log.commit(arg.commit_index) {
                 self.send_apply_flag();
             }
+        }
+        HeartbeatReply {
+            id: self.me as u64,
+            term: self.term,
         }
     }
 
@@ -368,6 +389,7 @@ impl Raft {
             term: self.term,
             commit_index: self.raft_log.commit_idx,
         };
+        self.heartbeat_round += 1;
         for &id in &self.peer_ids {
             if id == self.me {
                 continue;
@@ -377,9 +399,13 @@ impl Raft {
             let mut arg_clone = arg.clone();
             let pr = self.prs.progress_map.get(&id).unwrap();
             arg_clone.commit_index = std::cmp::min(arg_clone.commit_index, pr.matched_index);
+            let mut tx = self.append_entries_router.tx.clone();
             peer.spawn(async move {
                 // todo: now, we don't need the result of hb
-                let _ = peer_clone.heartbeat(&arg_clone).await.map_err(Error::Rpc);
+                let resp = peer_clone.heartbeat(&arg_clone).await.map_err(Error::Rpc);
+                if let Ok(resp) = resp {
+                    tx.send(Reply::HeartbeatReply(resp)).await.expect("Something wrong when receiving hb");
+                }
             });
         }
     }
@@ -436,7 +462,10 @@ impl Raft {
         self.prs.reset_vote_record();
 
         if PRINT_ELECTION {
-            println!("[{}] becomes follower at term {}", self.me, term);
+            println!(
+                "[{}] becomes follower at term {} commit index {}",
+                self.me, term, self.raft_log.commit_idx
+            );
         }
     }
 
@@ -507,16 +536,6 @@ impl Raft {
         }
     }
 
-    // fn request_vote(&self, tx: UnboundedSender<bool>, id: usize, vote_request: &RequestVoteArgs) {
-    //     if let Ok(res) =
-    //         futures::executor::block_on(async { self.peers[id].request_vote(&vote_request).await })
-    //     {
-    //         self.prs.record_vote(id, res.grant);
-    //     } else {
-    //         tx.send(false);
-    //     }
-    // }
-
     /// save Raft's persistent state to stable storage,
     /// where it can later be retrieved after a crash and restart.
     /// see paper's Figure 2 for a description of what should be persistent.
@@ -526,24 +545,40 @@ impl Raft {
         // labcodec::encode(&self.xxx, &mut data).unwrap();
         // labcodec::encode(&self.yyy, &mut data).unwrap();
         // self.persister.save_raft_state(data);
+
+        let vote;
+        match self.vote {
+            Some(v) => vote = v,
+            None => vote = usize::MAX,
+        }
+
+        let raft_state = RaftDurableState {
+            term: self.term,
+            vote: vote as u64,
+            entries: self.raft_log.entries.clone(),
+        };
+
+        let mut buf = vec![];
+        labcodec::encode(&raft_state, &mut buf).expect("Persist error!!!");
+        self.persister.save_raft_state(buf);
     }
 
     /// restore previously persisted state.
     fn restore(&mut self, data: &[u8]) {
         if data.is_empty() {
             // bootstrap without any state?
+            return;
         }
-        // Your code here (2C).
-        // Example:
-        // match labcodec::decode(data) {
-        //     Ok(o) => {
-        //         self.xxx = o.xxx;
-        //         self.yyy = o.yyy;
-        //     }
-        //     Err(e) => {
-        //         panic!("{:?}", e);
-        //     }
-        // }
+
+        let raft_state: RaftDurableState =
+            labcodec::decode(data).expect("Something wrong when decoding");
+        if raft_state.vote as usize == usize::MAX {
+            self.vote = None;
+        } else {
+            self.vote = Some(raft_state.vote as usize);
+        }
+        self.term = raft_state.term;
+        self.raft_log.entries = raft_state.entries;
     }
 
     /// example code to send a RequestVote RPC to a server.
@@ -605,6 +640,7 @@ impl Raft {
             data: buf,
         };
         self.raft_log.append(entry);
+        self.persist();
 
         let pr = self.prs.progress_map.get_mut(&self.me).unwrap();
         pr.matched_index = self.raft_log.last_index();
@@ -630,7 +666,7 @@ impl Raft {
         }
     }
 
-    fn send_append(&self, to: usize, mut sender: UnboundedSender<AppendEntryReply>) {
+    fn send_append(&self, to: usize, mut sender: UnboundedSender<Reply>) {
         let peer = &self.peers[to];
         let peer_clone = peer.clone();
 
@@ -652,7 +688,7 @@ impl Raft {
         peer.spawn(async move {
             let res = peer_clone.append_entries(&arg).await.map_err(Error::Rpc);
             if let Ok(res) = res {
-                let _ = sender.send(res).await;
+                let _ = sender.send(Reply::AppendReply(res)).await;
             }
         });
 
@@ -799,16 +835,37 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
     }
 }
 
-pub fn handle_append_resp(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<AppendEntryReply>) {
+pub enum Reply {
+    AppendReply(AppendEntryReply),
+    HeartbeatReply(HeartbeatReply),
+    Shutdown,
+}
+
+pub fn handle_resp_worker(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Reply>) {
     loop {
         futures::executor::block_on(async {
             while let Some(res) = rx.next().await {
-                let mut rf_locked = rf.lock().unwrap();
-                if rf_locked.shutdown {
-                    println!("[{}] handle_append_resp exit", rf_locked.me);
-                    return;
+                match res {
+                    Reply::AppendReply(res) => {
+                        let mut rf_locked = rf.lock().unwrap();
+                        if rf_locked.shutdown {
+                            println!("[{}] handle_append_resp exit", rf_locked.me);
+                            return;
+                        }
+
+                        rf_locked.handle_append_resp(res);
+                    },
+                    Reply::HeartbeatReply(res) => {
+                        let mut rf_locked = rf.lock().unwrap();
+                        if rf_locked.shutdown {
+                            println!("[{}] handle_append_resp exit", rf_locked.me);
+                            return;
+                        }
+
+                        rf_locked.handle_hb_resp(res);
+                    }
+                    Reply::Shutdown => return,
                 }
-                rf_locked.handle_append_resp(res);
             }
         })
     }
@@ -844,7 +901,7 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                 let rf_locked = rf.lock().unwrap();
                 println!("[{}] apply worker exit", rf_locked.me);
                 return;
-            },
+            }
         }
     }
 }
