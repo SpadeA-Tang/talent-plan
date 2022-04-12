@@ -1,27 +1,211 @@
-[3] becomes follower at term 4
-[0] becomes follower at term 4
-[2] becomes follower at term 4
-[1] becomes follower at term 4
-[3] becomes follower at term 4
-[0] becomes follower at term 4
-[1] becomes follower at term 4
-[2] becomes follower at term 4
-[3] becomes follower at term 4
-[4] start command of index 3 and term 4
-[4] send entries from 3 to 3 to peer 0
-[4] send entries from 3 to 3 to peer 1
-[4] send entries from 3 to 3 to peer 2
-[4] send entries from 3 to 3 to peer 3
-[4] start command of index 4 and term 4
+[2] becomes candidate at term 1
+[0] grant vote for 2 at term 0
+[0] becomes follower at term 1 commit index 0
+[1] grant vote for 2 at term 0
+[1] becomes follower at term 1 commit index 0
+[2] received vote from 0 at term 1
+[3] grant vote for 2 at term 0
+[3] becomes follower at term 1 commit index 0
+[2] received vote from 1 at term 1
+[4] grant vote for 2 at term 0
+[4] becomes follower at term 1 commit index 0
+[2] becomes leader at term 1
+[0] becomes follower at term 1 commit index 0
+[1] becomes follower at term 1 commit index 0
+[4] becomes follower at term 1 commit index 0
+[3] becomes follower at term 1 commit index 0
+[2] start command of index 1 and term 1
+[2] send entries from 1 to 1 to peer 0
+[0] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[0] conflict_index 1 self.commit_index 0
+[1] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[1] conflict_index 1 self.commit_index 0
+[2] send entries from 1 to 1 to peer 1
+[2] send entries from 1 to 1 to peer 3
+[3] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[3] conflict_index 1 self.commit_index 0
+[2] send entries from 1 to 1 to peer 4
+[4] receive entries(1 - 1) from [2] with term 1 and commit index 0
+[4] conflict_index 1 self.commit_index 0
+[2] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 221, 201, 192, 213, 196, 166, 179, 132, 161, 1] }
+[2] start command of index 2 and term 1
+[2] send entries from 2 to 2 to peer 0
+[0] receive entries(2 - 2) from [2] with term 1 and commit index 1
+[0] conflict_index 2 self.commit_index 0
+[1] receive entries(2 - 2) from [2] with term 1 and commit index 1
+[2] send entries from 2 to 2 to peer 1
+[0] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 221, 201, 192, 213, 196, 166, 179, 132, 161, 1] }
+[1] conflict_index 2 self.commit_index 0
+[2] send entries from 2 to 2 to peer 3
+[3] receive entries(2 - 2) from [2] with term 1 and commit index 1
+[3] conflict_index 2 self.commit_index 0
+[2] send entries from 2 to 2 to peer 4
+[1] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 221, 201, 192, 213, 196, 166, 179, 132, 161, 1] }
+[3] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 221, 201, 192, 213, 196, 166, 179, 132, 161, 1] }
+[2] update commit index to 2 with ent Entry { term: 1, index: 2, data: [160, 6, 212, 225, 144, 235, 186, 228, 188, 198, 29] }
+[4] receive entries(2 - 2) from [2] with term 1 and commit index 1
+[4] conflict_index 2 self.commit_index 0
+[4] update commit index to 1 with ent Entry { term: 1, index: 1, data: [160, 6, 221, 201, 192, 213, 196, 166, 179, 132, 161, 1] }
+disconnect(2)
+[2] apply worker exit
+[2] background worker exit
+[2] kill finish
+[0] becomes candidate at term 2
+[1] grant vote for 0 at term 1
+[1] becomes follower at term 2 commit index 1
+[3] grant vote for 0 at term 1
+[3] becomes follower at term 2 commit index 1
+[0] received vote from 1 at term 2
+[4] grant vote for 0 at term 1
+[4] becomes follower at term 2 commit index 1
+[0] received vote from 3 at term 2
+[0] becomes leader at term 2
+[1] becomes follower at term 2 commit index 1
+[3] becomes follower at term 2 commit index 1
+[4] becomes follower at term 2 commit index 1
+[0] start command of index 3 and term 2
+[0] send entries from 3 to 3 to peer 1
+[0] send entries from 3 to 3 to peer 2
+[1] receive entries(3 - 3) from [0] with term 2 and commit index 1
+[1] conflict_index 3 self.commit_index 1
+[3] receive entries(3 - 3) from [0] with term 2 and commit index 1
+[3] conflict_index 3 self.commit_index 1
+[0] send entries from 3 to 3 to peer 3
+[0] send entries from 3 to 3 to peer 4
+[4] receive entries(3 - 3) from [0] with term 2 and commit index 1
+[4] conflict_index 3 self.commit_index 1
+[0] update commit index to 3 with ent Entry { term: 2, index: 3, data: [160, 6, 153, 213, 166, 202, 163, 217, 145, 128, 48] }
+disconnect(0)
+[0] apply worker exit
+[0] background worker exit
+[0] kill finish
+[4] becomes candidate at term 3
+[1] grant vote for 4 at term 2
+[1] becomes follower at term 3 commit index 1
+[3] grant vote for 4 at term 2
+[3] becomes follower at term 3 commit index 1
+[4] received vote from 1 at term 3
+[4] received vote from 3 at term 3
+[4] becomes leader at term 3
+[1] becomes follower at term 3 commit index 1
+[3] becomes follower at term 3 commit index 1
+[1] becomes follower at term 3 commit index 1
+[3] becomes follower at term 3 commit index 1
+[4] start command of index 4 and term 3
+[4] send entries from 4 to 4 to peer 0
+[4] send entries from 4 to 4 to peer 1
+[1] receive entries(4 - 4) from [4] with term 3 and commit index 1
+[1] conflict_index 4 self.commit_index 1
+[4] send entries from 4 to 4 to peer 2
+[4] send entries from 4 to 4 to peer 3
+[3] receive entries(4 - 4) from [4] with term 3 and commit index 1
+[3] conflict_index 4 self.commit_index 1
+[4] update commit index to 4 with ent Entry { term: 3, index: 4, data: [160, 6, 221, 154, 230, 221, 201, 154, 137, 243, 243, 1] }
 
-[4] send entries from 3 to 4 to peer 2
-[2] receive entries(3 - 3) from [4] with term 4 and commit index 1
-[2] (last_index 1, last_term 1) has not match index with [4] (prev_index 2, prev_term1)
-[4] send entries from 1 to 4 to peer 2
-[2] receive entries(3 - 4) from [4] with term 4 and commit index 1
-[2] (last_index 1, last_term 1) has not match index with [4] (prev_index 2, prev_term1)
+这里， server 4 复制 index 为4 的log entry
 
-失败原因 pr.next_index 减到了 0
 
-这里[2]貌似重复收到了之前的append entry rpc
-导致 pr.next_index 被减到0了 
+disconnect(4)
+[4] apply worker exit
+[4] background worker exit
+[4] kill finish
+disconnect(0)
+connect(0)
+[0] becomes candidate at term 3
+[3] grant vote for 0 at term 3
+[3] becomes follower at term 3 commit index 1
+[1] grant vote for 0 at term 3
+[1] becomes follower at term 3 commit index 1
+[0] received vote from 3 at term 3
+[0] received vote from 1 at term 3
+[0] becomes leader at term 3
+[0] start command of index 4 and term 3
+[1] becomes follower at term 3 commit index 1
+[3] becomes follower at term 3 commit index 1
+[0] send entries from 4 to 4 to peer 1
+[1] receive entries(4 - 4) from [0] with term 3 and commit index 0
+[1] conflict_index 0 self.commit_index 1
+[0] send entries from 4 to 4 to peer 2
+[0] send entries from 4 to 4 to peer 3
+[3] receive entries(4 - 4) from [0] with term 3 and commit index 0
+[3] conflict_index 0 self.commit_index 1
+[0] send entries from 4 to 4 to peer 4
+[0] update commit index to 4 with ent Entry { term: 3, index: 4, data: [160, 6, 204, 252, 184, 236, 247, 202, 248, 167, 79] }
+thread '<unnamed>' panicked at 'commit index=4 server=0 Entry { x: 5715035317552954956 } != server=4 Entry { x: 17574775091424234845 }', raft\src\raft\config.rs:419:29
+stack backtrace:
+disconnect(0)
+[0] apply worker exit
+   [0] background worker exit
+0: [0] kill finish
+std::panicking::begin_panic_handlerdisconnect(0)
+
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rsconnect(0)
+:515
+   1: std::panicking::begin_panic_fmt
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rs:457
+   2: raft::raft::config::impl$1::start1_ext::closure$0
+             at .\src\raft\config.rs:419
+   3: futures_util::stream::stream::for_each::impl$4::poll<futures_channel::mpsc::UnboundedReceiver<enum$<raft::raft::raft::ApplyMsg> >,futures_util::future::ready::Ready<tuple$<> >,raft::raft::config::impl$1::start1_ext::closure$0>       
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-util-0.3.4\src\stream\stream\for_each.rs:79
+   4: futures_task::future_obj::impl$4::poll<tuple$<> >
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-task-0.3.4\src\future_obj.rs:86
+   5: futures_task::future_obj::impl$10::poll<tuple$<> >
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-task-0.3.4\src\future_obj.rs:133
+   6: futures_util::future::future::FutureExt::poll_unpin<futures_task::future_obj::FutureObj<tuple$<> > >
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-util-0.3.4\src\future\future\mod.rs:507
+   7: futures_executor::thread_pool::Task::run
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-executor-0.3.4\src\thread_pool.rs:324
+   8: futures_executor::thread_pool::PoolState::work
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-executor-0.3.4\src\thread_pool.rs:158
+   9: futures_executor::thread_pool::impl$8::create::closure$0
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-executor-0.3.4\src\thread_pool.rs:286
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+[0] becomes candidate at term 4
+[1] grant vote for 0 at term 3
+[1] becomes follower at term 4 commit index 1
+[3] grant vote for 0 at term 3
+[3] becomes follower at term 4 commit index 1
+[0] received vote from 1 at term 4
+[0] received vote from 3 at term 4
+[0] becomes leader at term 4
+[1] becomes follower at term 4 commit index 1
+[3] becomes follower at term 4 commit index 1
+[0] start command of index 5 and term 4
+[0] send entries from 5 to 5 to peer 1
+[1] receive entries(5 - 5) from [0] with term 4 and commit index 0
+[1] conflict_index 5 self.commit_index 1
+[0] send entries from 5 to 5 to peer 2
+[0] send entries from 5 to 5 to peer 3
+[3] receive entries(5 - 5) from [0] with term 4 and commit index 0
+[3] conflict_index 5 self.commit_index 1
+[0] send entries from 5 to 5 to peer 4
+[0] update commit index to 5 with ent Entry { term: 4, index: 5, data: [160, 6, 150, 253, 182, 229, 203, 162, 249, 225, 18] }
+thread '<unnamed>' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\config.rs:414:44
+stack backtrace:
+   0: std::panicking::begin_panic_handler
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rs:515
+   1: core::panicking::panic_fmt
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\core\src\panicking.rs:92
+   2: core::result::unwrap_failed
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\core\src\result.rs:1599
+   3: enum$<core::result::Result<std::sync::mutex::MutexGuard<raft::raft::config::Storage>,std::sync::poison::PoisonError<std::sync::mutex::MutexGuard<raft::raft::config::Storage> > > >::unwrap<std::sync::mutex::MutexGuard<raft::raft::config::Storage>,std::sync
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\library\core\src\result.rs:1281
+   4: raft::raft::config::impl$1::start1_ext::closure$0
+             at .\src\raft\config.rs:414
+   5: futures_util::stream::stream::for_each::impl$4::poll<futures_channel::mpsc::UnboundedReceiver<enum$<raft::raft::raft::ApplyMsg> >,futures_util::future::ready::Ready<tuple$<> >,raft::raft::config::impl$1::start1_ext::closure$0>       
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-util-0.3.4\src\stream\stream\for_each.rs:79
+   6: futures_task::future_obj::impl$4::poll<tuple$<> >
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-task-0.3.4\src\future_obj.rs:86
+   7: futures_task::future_obj::impl$10::poll<tuple$<> >
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-task-0.3.4\src\future_obj.rs:133
+   8: futures_util::future::future::FutureExt::poll_unpin<futures_task::future_obj::FutureObj<tuple$<> > >
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-util-0.3.4\src\future\future\mod.rs:507
+   9: futures_executor::thread_pool::Task::run
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-executor-0.3.4\src\thread_pool.rs:324
+  10: futures_executor::thread_pool::PoolState::work
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-executor-0.3.4\src\thread_pool.rs:158
+  11: futures_executor::thread_pool::impl$8::create::closure$0
+             at C:\Users\SpadeA.DESKTOP-6H9Q71A\.cargo\registry\src\mirrors.ustc.edu.cn-61ef6e0cd06fb9b8\futures-executor-0.3.4\src\thread_pool.rs:286
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+disconnect(0)
+[0] apply worker exit

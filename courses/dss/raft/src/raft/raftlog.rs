@@ -1,10 +1,13 @@
 use super::raft::Entry;
 
+
 pub struct RaftLog {
     pub commit_idx: u64,
     pub apply_idx: u64,
     pub entries: Vec<Entry>,
 
+    // it records the last log index when become the leader
+    pub prev_last_log_index: u64,
     last_index_in_snapshot: u64,
 }
 
@@ -15,6 +18,7 @@ impl RaftLog {
             apply_idx: 0,
             // 哨兵, 这样第一条log的index为1
             entries: vec![Entry{term: 0, index: 0, data: Vec::new()}],
+            prev_last_log_index: 0,
             last_index_in_snapshot: 0,
         }
     }
@@ -47,7 +51,7 @@ impl RaftLog {
         if log_index > self.last_index() {
             return false;
         }
-        if log_index > self.commit_idx {
+        if log_index > self.commit_idx && log_index > self.prev_last_log_index {
             self.commit_idx = log_index;
             true
         } else {

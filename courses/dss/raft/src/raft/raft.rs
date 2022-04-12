@@ -4,7 +4,6 @@ use futures::select;
 use futures::SinkExt;
 use futures::StreamExt;
 use rand::{self, Rng};
-use std::net::Shutdown;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -214,18 +213,17 @@ impl Raft {
     // matched log entry, it just decrease the pr.next_index by 1.
     pub fn handle_append_entry(&mut self, arg: AppendEntryArgs) -> AppendEntryReply {
         if PRINT_APPEND {
-            if arg.entries.len() == 0 {
-                println!("");
+            if arg.entries.len() != 0 {
+                println!(
+                    "[{}] receive entries({} - {}) from [{}] with term {} and commit index {}",
+                    self.me,
+                    arg.entries[0].index,
+                    arg.entries[arg.entries.len() - 1].index,
+                    arg.id,
+                    arg.term,
+                    arg.commit_index
+                );
             }
-            println!(
-                "[{}] receive entries({} - {}) from [{}] with term {} and commit index {}",
-                self.me,
-                arg.entries[0].index,
-                arg.entries[arg.entries.len() - 1].index,
-                arg.id,
-                arg.term,
-                arg.commit_index
-            );
         }
 
         let mut reply = AppendEntryReply {
@@ -283,16 +281,20 @@ impl Raft {
             // todo: 保证这个是对的
             let begin_index = (conflict_index - (arg.lastlog_index + 1)) as usize;
 
+            println!(
+                "[{}] success append entry from {} to {}",
+                self.me,
+                arg.entries[begin_index].index,
+                arg.entries[arg.entries.len() - 1].index
+            );
             self.raft_log.append_entries(&arg.entries[begin_index..]);
             self.persist();
         }
         if self.raft_log.commit(arg.commit_index) {
             if PRINT_APPEND {
                 println!(
-                    "[{}] update commit index to {} with ent {:?}",
-                    self.me,
-                    self.raft_log.commit_idx,
-                    self.raft_log.get_entry(self.raft_log.commit_idx)
+                    "[{}] update commit index to {}",
+                    self.me, self.raft_log.commit_idx,
                 );
             }
             self.send_apply_flag();
@@ -302,6 +304,9 @@ impl Raft {
     }
 
     pub fn handle_append_resp(&mut self, resp: AppendEntryReply) {
+        if PRINT_APPEND {
+            println!("[{}] received append resp {:?}", self.me, resp);
+        }
         if self.state != RaftState::Leader {
             return;
         }
@@ -353,10 +358,8 @@ impl Raft {
         if self.raft_log.commit(index) {
             if PRINT_APPEND {
                 println!(
-                    "[{}] update commit index to {} with ent {:?}",
-                    self.me,
-                    self.raft_log.commit_idx,
-                    self.raft_log.get_entry(self.raft_log.commit_idx)
+                    "[{}] update commit index to {}",
+                    self.me, self.raft_log.commit_idx,
                 );
             }
             self.send_apply_flag();
@@ -404,7 +407,9 @@ impl Raft {
                 // todo: now, we don't need the result of hb
                 let resp = peer_clone.heartbeat(&arg_clone).await.map_err(Error::Rpc);
                 if let Ok(resp) = resp {
-                    tx.send(Reply::HeartbeatReply(resp)).await.expect("Something wrong when receiving hb");
+                    tx.send(Reply::HeartbeatReply(resp))
+                        .await
+                        .expect("Something wrong when receiving hb");
                 }
             });
         }
@@ -420,12 +425,15 @@ impl Raft {
         if PRINT_ELECTION {
             println!("[{}] becomes candidate at term {}", self.me, self.term);
         }
+
+        self.persist();
     }
 
     fn become_leader(&mut self) {
         self.election_elapsed = 0;
         self.state = RaftState::Leader;
         self.vote = None;
+        self.raft_log.prev_last_log_index = self.raft_log.last_index();
 
         let me = self.me;
         let last_index = self.raft_log.last_index();
@@ -450,14 +458,19 @@ impl Raft {
             println!("[{}] becomes leader at term {}", self.me, self.term);
         }
 
+        self.persist();
         // self.bcast_append();
     }
 
     fn become_follower(&mut self, term: u64, leader: Option<usize>) {
         self.state = RaftState::Follower;
-        self.term = term;
+        assert!(term >= self.term);
+        if term > self.term {
+            self.vote = None;
+            self.term = term;
+            self.persist();
+        }
         self.leader = leader;
-        self.vote = None;
         self.election_elapsed = 0;
         self.prs.reset_vote_record();
 
@@ -487,17 +500,21 @@ impl Raft {
     }
 
     pub fn handle_vote_req(&mut self, req: RequestVoteArgs) -> RequestVoteReply {
-        if (req.term > self.term && self.log_up_to_date(req.log_term, req.log_index))
-            || (self.term == req.term && (self.vote == Some(req.id as usize) || self.vote == None))
+        // 首先log一定得up to date，然后是term更大 或者 相等，但是相等的时候要么之前就是投的他或者没投过
+        if self.log_up_to_date(req.log_term, req.log_index)
+            && (req.term > self.term
+                || (self.term == req.term
+                    && (self.vote == Some(req.id as usize) || self.vote == None)))
         {
             if PRINT_ELECTION {
                 println!(
-                    "[{}] grant vote for {} at term {}",
-                    self.me, req.id, self.term
+                    "[{}] grant vote for {} at term {} candidate[{}]'s log (index {}, term {}), follower[{}]'s log (index{}, term{})",
+                    self.me, req.id, self.term, req.id, req.log_index, req.log_term, self.me, self.raft_log.last_index(), self.raft_log.term(self.raft_log.last_index())
                 );
             }
             self.become_follower(req.term, None);
             self.vote = Some(req.id as usize);
+            self.persist();
 
             RequestVoteReply {
                 grant: true,
@@ -675,6 +692,9 @@ impl Raft {
         for log_index in pr.next_index..=self.raft_log.last_index() {
             entries.push(self.raft_log.get_entry(log_index).clone());
         }
+        if entries.len() == 0 {
+            return;
+        }
 
         let arg = AppendEntryArgs {
             id: self.me as u64,
@@ -727,12 +747,8 @@ impl Raft {
     /// Only for suppressing deadcode warnings.
     #[doc(hidden)]
     pub fn __suppress_deadcode(&mut self) {
-        let _ = self.start(&0);
         let _ = self.cond_install_snapshot(0, 0, &[]);
         let _ = self.snapshot(0, &[]);
-        self.persist();
-        let _ = &self.persister;
-        let _ = &self.peers;
     }
 }
 
@@ -854,7 +870,7 @@ pub fn handle_resp_worker(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Reply>
                         }
 
                         rf_locked.handle_append_resp(res);
-                    },
+                    }
                     Reply::HeartbeatReply(res) => {
                         let mut rf_locked = rf.lock().unwrap();
                         if rf_locked.shutdown {
