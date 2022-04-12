@@ -1,7 +1,7 @@
 use crate::proto::raftpb::*;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
 use std::sync::{Arc, Mutex};
-use std::thread;
+use std::thread::{self, JoinHandle};
 
 use super::errors::*;
 use super::raft::*;
@@ -26,6 +26,8 @@ pub struct Node {
     raft: Arc<Mutex<Raft>>,
 
     sender: UnboundedSender<ApplyMsg>,
+
+    workers: Arc<Mutex<Vec<JoinHandle<()>>>>,
 }
 
 impl Node {
@@ -37,30 +39,43 @@ impl Node {
         let node = Node {
             raft: Arc::new(Mutex::new(raft)),
             sender: tx,
+            workers: Arc::new(Mutex::new(Vec::new())),
         };
-
-        let rf2 = node.raft.clone();
-        let rf3 = node.raft.clone();
-        thread::spawn(move || {
-            background_worker(rf2);
-        });
+        let mut workers = node.workers.lock().unwrap();
 
         let mut rf_locked = node.raft.lock().unwrap();
-        let rx2 = rf_locked
-            .append_entries_router
-            .rx
-            .take()
+        let rf2 = node.raft.clone();
+        let rf3 = node.raft.clone();
+        let id = rf_locked.me;
+        let worker = thread::Builder::new()
+            .name(format!("BGWorker-{}", id))
+            .spawn(move || {
+                background_worker(rf2);
+            })
             .unwrap();
-        thread::spawn(move || {
-            handle_append_resp(rf3, rx2);
-        });
+        workers.push(worker);
+
+        let rx2 = rf_locked.append_entries_router.rx.take().unwrap();
+
+        let _worker = thread::Builder::new()
+            .name(format!("HandleaAEResp-{}", id))
+            .spawn(move || {
+                handle_append_resp(rf3, rx2);
+            })
+            .unwrap();
+        // workers.push(worker);
 
         let rf4 = node.raft.clone();
         let rx3 = rf_locked.apply_flag_router.rx.take().unwrap();
-        thread::spawn(move || {
-            apply_worker(rf4, rx3);
-        });
-        
+        let worker = thread::Builder::new()
+            .name(format!("Applyworker-{}", id))
+            .spawn(move || {
+                apply_worker(rf4, rx3);
+            })
+            .unwrap();
+        workers.push(worker);
+
+        drop(workers);
         drop(rf_locked);
         node
     }
@@ -128,6 +143,15 @@ impl Node {
     /// threads you generated with this Raft Node.
     pub fn kill(&self) {
         // Your code here, if desired.
+        let mut rf_locked = self.raft.lock().unwrap();
+        rf_locked.shutdown();
+        drop(rf_locked);
+
+        for worker in self.workers.lock().unwrap().drain(..) {
+            worker.join().expect("Cannot join the thread");
+        }
+
+        println!("[{}] kill finish", self.raft.lock().unwrap().me);
     }
 
     /// A service wants to switch to snapshot.  
@@ -169,10 +193,7 @@ impl RaftService for Node {
     }
 
     async fn heartbeat(&self, args: HeartbeatArgs) -> labrpc::Result<HeartbeatReply> {
-        self.raft
-            .lock()
-            .unwrap()
-            .handle_heartbeat(args);
+        self.raft.lock().unwrap().handle_heartbeat(args);
         Ok(HeartbeatReply {})
     }
 

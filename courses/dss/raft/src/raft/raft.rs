@@ -86,7 +86,7 @@ pub struct Raft {
     // Your data here (2A, 2B, 2C).
     // Look at the paper's Figure 2 for a description of what
     // state a Raft server must maintain.
-    me: usize,
+    pub me: usize,
     peer_ids: Vec<usize>,
 
     state: RaftState,
@@ -109,6 +109,8 @@ pub struct Raft {
     // msgs: Vec<Msg>,
     apply_ch: UnboundedSender<ApplyMsg>,
     pub apply_flag_router: ApplyFlagRouter,
+
+    shutdown: bool,
 }
 
 pub struct ApplyFlagRouter {
@@ -136,6 +138,82 @@ pub enum ApplyFlag {
 }
 
 impl Raft {
+    /// the service or tester wants to create a Raft server. the ports
+    /// of all the Raft servers (including this one) are in peers. this
+    /// server's port is peers[me]. all the servers' peers arrays
+    /// have the same order. persister is a place for this server to
+    /// save its persistent state, and also initially holds the most
+    /// recent saved state, if any. apply_ch is a channel on which the
+    /// tester or service expects Raft to send ApplyMsg messages.
+    /// This method must return quickly.
+    pub fn new(
+        peers: Vec<RaftClient>,
+        me: usize,
+        persister: Box<dyn Persister>,
+        apply_ch: UnboundedSender<ApplyMsg>,
+    ) -> Raft {
+        let raft_state = persister.raft_state();
+
+        let mut peer_ids = Vec::new();
+        for i in 0..peers.len() {
+            peer_ids.push(i);
+        }
+        let prs = ProgressTracker::new(&peer_ids);
+        // Your initialization code here (2A, 2B, 2C).
+        let mut rf = Raft {
+            peers,
+            persister,
+            me,
+            peer_ids,
+            state: RaftState::Follower,
+            term: 0,
+            vote: None,
+            leader: None,
+            election_elapsed: 0,
+            heartbeat_elapsed: 0,
+            randomized_election_timeout: gen_randomized_timeout(),
+            election_timeout: ELECTION_TIMEOUT,
+            heatbeat_timeout: HEARTBEAT_TIMEOUT,
+
+            prs,
+
+            raft_log: RaftLog::new(),
+            // vote_router: Router::new(),
+            append_entries_router: Router::new(),
+
+            apply_ch,
+            apply_flag_router: ApplyFlagRouter::new(),
+
+            shutdown: false,
+        };
+
+        // initialize from state persisted before a crash
+        rf.restore(&raft_state);
+
+        // crate::your_code_here((rf, apply_ch))
+        rf
+    }
+
+    // todo: Shutdown should be done more elegantly
+    pub fn shutdown(&mut self) {
+        self.shutdown = true;
+
+        futures::executor::block_on(async {
+            self.append_entries_router
+                .tx
+                .send(AppendEntryReply {
+                    id: 0,
+                    index: 0,
+                    success: false,
+                    term: 0,
+                })
+                .await.unwrap();
+        });
+
+        self.apply_flag_router.send(ApplyFlag::Shutdown).unwrap();
+
+    }
+
     // First, I will implement naive rejection which means when leader discovers that the folower does not have a
     // matched log entry, it just decrease the pr.next_index by 1.
     pub fn handle_append_entry(&mut self, arg: AppendEntryArgs) -> AppendEntryReply {
@@ -270,60 +348,6 @@ impl Raft {
 
     fn send_apply_flag(&mut self) {
         self.apply_flag_router.send(ApplyFlag::Apply).unwrap();
-    }
-
-    /// the service or tester wants to create a Raft server. the ports
-    /// of all the Raft servers (including this one) are in peers. this
-    /// server's port is peers[me]. all the servers' peers arrays
-    /// have the same order. persister is a place for this server to
-    /// save its persistent state, and also initially holds the most
-    /// recent saved state, if any. apply_ch is a channel on which the
-    /// tester or service expects Raft to send ApplyMsg messages.
-    /// This method must return quickly.
-    pub fn new(
-        peers: Vec<RaftClient>,
-        me: usize,
-        persister: Box<dyn Persister>,
-        apply_ch: UnboundedSender<ApplyMsg>,
-    ) -> Raft {
-        let raft_state = persister.raft_state();
-
-        let mut peer_ids = Vec::new();
-        for i in 0..peers.len() {
-            peer_ids.push(i);
-        }
-        let prs = ProgressTracker::new(&peer_ids);
-        // Your initialization code here (2A, 2B, 2C).
-        let mut rf = Raft {
-            peers,
-            persister,
-            me,
-            peer_ids,
-            state: RaftState::Follower,
-            term: 0,
-            vote: None,
-            leader: None,
-            election_elapsed: 0,
-            heartbeat_elapsed: 0,
-            randomized_election_timeout: gen_randomized_timeout(),
-            election_timeout: ELECTION_TIMEOUT,
-            heatbeat_timeout: HEARTBEAT_TIMEOUT,
-
-            prs,
-
-            raft_log: RaftLog::new(),
-            // vote_router: Router::new(),
-            append_entries_router: Router::new(),
-
-            apply_ch,
-            apply_flag_router: ApplyFlagRouter::new(),
-        };
-
-        // initialize from state persisted before a crash
-        rf.restore(&raft_state);
-
-        // crate::your_code_here((rf, apply_ch))
-        rf
     }
 
     // todo : handle commit index
@@ -690,6 +714,10 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
         thread::sleep(Duration::from_millis(sleep_time));
 
         let mut rf_locked = rf.lock().unwrap();
+        if rf_locked.shutdown {
+            println!("[{}] background worker exit", rf_locked.me);
+            break;
+        }
         rf_locked.election_elapsed += sleep_time;
         rf_locked.heartbeat_elapsed += sleep_time;
         if rf_locked.election_elapsed
@@ -752,6 +780,7 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                         if let Some(vote_resp) = vote_resp
                         {
                             let mut rf_locked = rf.lock().unwrap();
+
                             // 首先判断现在还是不是candidate
                             let vote_resp = rf_locked.poll(vote_resp);
                             if vote_resp == VoteResult::VoteWin {
@@ -775,6 +804,10 @@ pub fn handle_append_resp(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Append
         futures::executor::block_on(async {
             while let Some(res) = rx.next().await {
                 let mut rf_locked = rf.lock().unwrap();
+                if rf_locked.shutdown {
+                    println!("[{}] handle_append_resp exit", rf_locked.me);
+                    return;
+                }
                 rf_locked.handle_append_resp(res);
             }
         })
@@ -807,7 +840,11 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                 let mut rf_locked = rf.lock().unwrap();
                 rf_locked.raft_log.apply_idx = commit_idx;
             }
-            ApplyFlag::Shutdown => unimplemented!(),
+            ApplyFlag::Shutdown => {
+                let rf_locked = rf.lock().unwrap();
+                println!("[{}] apply worker exit", rf_locked.me);
+                return;
+            },
         }
     }
 }
