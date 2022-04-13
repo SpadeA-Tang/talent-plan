@@ -489,7 +489,7 @@ impl Config {
     /// detach server i from the net.
     pub fn disconnect(&mut self, i: usize) {
         debug!("disconnect({})", i);
-        println!("disconnect({})", i);
+        // println!("disconnect({})", i);
 
         self.connected[i] = false;
 
@@ -508,7 +508,7 @@ impl Config {
     /// attach server i to the net.
     pub fn connect(&mut self, i: usize) {
         debug!("connect({})", i);
-        println!("connect({})", i);
+        // println!("connect({})", i);
 
         self.connected[i] = true;
 

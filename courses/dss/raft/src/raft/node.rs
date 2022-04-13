@@ -150,8 +150,6 @@ impl Node {
         for worker in self.workers.lock().unwrap().drain(..) {
             worker.join().expect("Cannot join the thread");
         }
-
-        println!("[{}] kill finish", self.raft.lock().unwrap().me);
     }
 
     /// A service wants to switch to snapshot.  

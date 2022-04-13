@@ -1,6 +1,5 @@
 use super::raft::Entry;
 
-
 pub struct RaftLog {
     pub commit_idx: u64,
     pub apply_idx: u64,
@@ -17,12 +16,15 @@ impl RaftLog {
             commit_idx: 0,
             apply_idx: 0,
             // 哨兵, 这样第一条log的index为1
-            entries: vec![Entry{term: 0, index: 0, data: Vec::new()}],
+            entries: vec![Entry {
+                term: 0,
+                index: 0,
+                data: Vec::new(),
+            }],
             prev_last_log_index: 0,
             last_index_in_snapshot: 0,
         }
     }
-
 
     // todo: fix this
     pub fn term(&self, log_index: u64) -> u64 {
@@ -31,7 +33,6 @@ impl RaftLog {
         } else {
             self.get_entry(log_index).term
         }
-
     }
 
     pub fn match_term(&self, index: u64, term: u64) -> bool {
@@ -41,7 +42,7 @@ impl RaftLog {
     pub fn find_conflict_entry(&self, entries: &Vec<Entry>) -> u64 {
         for ent in entries {
             if !self.match_term(ent.index, ent.term) {
-                return ent.index
+                return ent.index;
             }
         }
         0
@@ -57,7 +58,6 @@ impl RaftLog {
         } else {
             false
         }
-        
     }
 
     pub fn last_index(&self) -> u64 {
@@ -74,7 +74,6 @@ impl RaftLog {
         if ents.len() == 0 {
             return;
         }
-
     }
 
     pub fn real_index(&self, log_index: u64) -> u64 {
@@ -95,7 +94,6 @@ impl RaftLog {
         for ent in ents {
             self.append(ent.clone());
         }
-
     }
 
     pub fn trunct(&mut self, len: usize) {
@@ -104,5 +102,20 @@ impl RaftLog {
 
     pub fn get_entry(&self, log_index: u64) -> &Entry {
         &self.entries[self.real_index(log_index) as usize]
+    }
+
+    // It takes an (index, term) pair (indicating a conflicting log
+    // entry on a leader/follower during an append) and finds the largest index in
+    // log l with a term <= `term` and an index <= `index`. If no such index exists
+    // in the log, the log's first index is returned.
+    //
+    pub fn find_conflict_by_term(&self, mut index: u64, term: u64) -> u64 {
+        loop {
+            let log_term = self.term(index);
+            if log_term <= term || term == 0 {
+                return index;
+            }
+            index -= 1;
+        }
     }
 }

@@ -16,8 +16,8 @@ const ELECTION_TIMEOUT: u64 = 200;
 const HEARTBEAT_TIMEOUT: u64 = 100;
 const SLEEP_DURATION: u64 = 30;
 
-const PRINT_ELECTION: bool = true;
-const PRINT_APPEND: bool = true;
+const PRINT_ELECTION: bool = false;
+const PRINT_APPEND: bool = false;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -225,12 +225,14 @@ impl Raft {
                 );
             }
         }
+        assert!(arg.entries.len() != 0);
 
         let mut reply = AppendEntryReply {
             id: self.me as u64,
             term: arg.term,
             index: 0,
             success: false,
+            log_term: 0,
         };
 
         // 1. reply false if arg.term < self.term
@@ -252,23 +254,31 @@ impl Raft {
                 println!("[{}] (last_index {}, last_term {}) has not match index with [{}] (prev_index {}, prev_term{})", 
                     self.me, self.raft_log.last_index(),  self.raft_log.term(self.raft_log.last_index()), arg.id, arg.lastlog_index, arg.lastlog_term);
             }
-            reply.index = self.raft_log.last_index();
+
+            // 返回可能产生分歧的最新的log
+            // 即找到最新的log，其index <= arg.index 并且 term <= arg.term
+            let mut hint_index = std::cmp::min(self.raft_log.last_index(), arg.lastlog_index);
+            hint_index = self
+                .raft_log
+                .find_conflict_by_term(hint_index, arg.lastlog_term);
+            let hint_term = self.raft_log.term(hint_index);
+
+            reply.index = hint_index;
+            reply.log_term = hint_term;
             return reply;
         }
 
         reply.success = true;
         reply.index = arg.lastlog_index + arg.entries.len() as u64;
 
-        if arg.entries.len() == 0 {
-            return reply;
-        }
-
         // 3. Find conflict entries
         let conflict_index = self.raft_log.find_conflict_entry(&arg.entries);
-        println!(
-            "[{}] conflict_index {} self.commit_index {}",
-            self.me, conflict_index, self.raft_log.commit_idx
-        );
+        if PRINT_APPEND {
+            println!(
+                "[{}] conflict_index {} self.commit_index {}",
+                self.me, conflict_index, self.raft_log.commit_idx
+            );
+        }
         assert!(conflict_index == 0 || conflict_index >= self.raft_log.commit_idx);
 
         // conflict_index == 0 means that this follower already has all ents
@@ -281,12 +291,15 @@ impl Raft {
             // todo: 保证这个是对的
             let begin_index = (conflict_index - (arg.lastlog_index + 1)) as usize;
 
-            println!(
-                "[{}] success append entry from {} to {}",
-                self.me,
-                arg.entries[begin_index].index,
-                arg.entries[arg.entries.len() - 1].index
-            );
+            if PRINT_APPEND {
+                println!(
+                    "[{}] success append entry from {} to {}",
+                    self.me,
+                    arg.entries[begin_index].index,
+                    arg.entries[arg.entries.len() - 1].index
+                );
+            }
+
             self.raft_log.append_entries(&arg.entries[begin_index..]);
             self.persist();
         }
@@ -322,10 +335,15 @@ impl Raft {
             }
         } else {
             let mut pr = self.prs.progress_map.get_mut(&(resp.id as usize)).unwrap();
-            pr.next_index = std::cmp::min(pr.next_index - 1, resp.index);
-            // it should not be less than 1
-            // todo: handle it elegantly.
-            pr.next_index = std::cmp::max(pr.next_index, 1);
+
+            let mut next_index = resp.index;
+            if resp.log_term > 0 {
+                next_index = self
+                    .raft_log
+                    .find_conflict_by_term(next_index, resp.log_term);
+            }
+            pr.next_index = std::cmp::min(pr.next_index - 1, next_index);
+            pr.next_index = std::cmp::max(pr.next_index, pr.matched_index + 1);
 
             let tx = self.append_entries_router.tx.clone();
             self.send_append(resp.id as usize, tx);
@@ -342,7 +360,7 @@ impl Raft {
             return;
         }
 
-        if self.heartbeat_round > 5 {
+        if self.heartbeat_round > 10 {
             self.heartbeat_round = 0;
             let pr = self.prs.progress_map.get(&(resp.id as usize)).unwrap();
             if pr.matched_index < self.raft_log.last_index() {
@@ -367,7 +385,9 @@ impl Raft {
     }
 
     fn send_apply_flag(&mut self) {
-        self.apply_flag_router.send(ApplyFlag::Apply).unwrap();
+        if let Err(e) = self.apply_flag_router.send(ApplyFlag::Apply) {
+            println!("Warning: {}", e);
+        }
     }
 
     // todo : handle commit index
@@ -767,7 +787,6 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
 
         let mut rf_locked = rf.lock().unwrap();
         if rf_locked.shutdown {
-            println!("[{}] background worker exit", rf_locked.me);
             break;
         }
         rf_locked.election_elapsed += sleep_time;
@@ -865,7 +884,6 @@ pub fn handle_resp_worker(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Reply>
                     Reply::AppendReply(res) => {
                         let mut rf_locked = rf.lock().unwrap();
                         if rf_locked.shutdown {
-                            println!("[{}] handle_append_resp exit", rf_locked.me);
                             return;
                         }
 
@@ -874,7 +892,6 @@ pub fn handle_resp_worker(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Reply>
                     Reply::HeartbeatReply(res) => {
                         let mut rf_locked = rf.lock().unwrap();
                         if rf_locked.shutdown {
-                            println!("[{}] handle_append_resp exit", rf_locked.me);
                             return;
                         }
 
@@ -914,8 +931,6 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                 rf_locked.raft_log.apply_idx = commit_idx;
             }
             ApplyFlag::Shutdown => {
-                let rf_locked = rf.lock().unwrap();
-                println!("[{}] apply worker exit", rf_locked.me);
                 return;
             }
         }
