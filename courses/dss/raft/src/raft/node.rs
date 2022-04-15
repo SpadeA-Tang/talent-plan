@@ -167,7 +167,7 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.cond_install_snapshot(last_included_term, last_included_index, snapshot)
-        crate::your_code_here((last_included_term, last_included_index, snapshot));
+        self.raft.lock().unwrap().cond_install_snapshot(last_included_term, last_included_index, snapshot)
     }
 
     /// The service says it has created a snapshot that has all info up to and
@@ -178,7 +178,7 @@ impl Node {
         // Your code here.
         // Example:
         // self.raft.snapshot(index, snapshot)
-        crate::your_code_here((index, snapshot));
+        self.raft.lock().unwrap().snapshot(index, snapshot);
     }
 }
 

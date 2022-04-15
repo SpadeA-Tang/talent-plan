@@ -7,22 +7,24 @@ pub struct RaftLog {
 
     // it records the last log index when become the leader
     pub prev_last_log_index: u64,
-    last_index_in_snapshot: u64,
+    pub last_index_in_snapshot: u64,
+    pub last_term_in_snapshot: u64,
 }
 
 impl RaftLog {
-    pub fn new() -> RaftLog {
+    pub fn new(last_index_in_snapshot: u64, last_term_in_snapshot: u64) -> RaftLog {
         RaftLog {
             commit_idx: 0,
             apply_idx: 0,
             // 哨兵, 这样第一条log的index为1
             entries: vec![Entry {
-                term: 0,
-                index: 0,
+                term: last_term_in_snapshot,
+                index: last_index_in_snapshot,
                 data: Vec::new(),
             }],
             prev_last_log_index: 0,
-            last_index_in_snapshot: 0,
+            last_index_in_snapshot,
+            last_term_in_snapshot,
         }
     }
 
@@ -77,6 +79,9 @@ impl RaftLog {
     }
 
     pub fn real_index(&self, log_index: u64) -> u64 {
+        if log_index < self.last_index_in_snapshot {
+            println!("Something wrong");
+        }
         assert!(log_index >= self.last_index_in_snapshot);
         let real_index = log_index - self.last_index_in_snapshot;
         if real_index as usize >= self.entries.len() {

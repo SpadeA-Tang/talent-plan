@@ -1,22 +1,19 @@
 use std::collections::HashMap;
 
-pub struct Progress {
-    pub next_index: u64,
-    pub matched_index: u64,
-}
-
-impl Progress {
-    pub fn new() -> Progress {
-        Progress {
-            next_index: 0,
-            matched_index: 0,
-        }
-    }
-}
-
 pub struct ProgressTracker {
     votes: HashMap<usize, bool>,
     pub progress_map: HashMap<usize, Progress>,
+}
+
+pub struct Progress {
+    pub next_index: u64,
+    pub matched_index: u64,
+    pub state: PrState
+}
+
+pub enum PrState {
+    NormalState,
+    SnapshotState,
 }
 
 #[derive(PartialEq, Debug)]
@@ -25,6 +22,17 @@ pub enum VoteResult {
     VoteLost,
     VoteWin,
 }
+
+impl Progress {
+    pub fn new() -> Progress {
+        Progress {
+            next_index: 0,
+            matched_index: 0,
+            state: PrState::NormalState,
+        }
+    }
+}
+
 
 impl ProgressTracker {
     pub fn new(peer_ids: &Vec<usize>) -> ProgressTracker {

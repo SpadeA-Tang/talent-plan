@@ -178,7 +178,7 @@ impl Raft {
 
             prs,
 
-            raft_log: RaftLog::new(),
+            raft_log: RaftLog::new(0, 0),
             // vote_router: Router::new(),
             append_entries_router: Router::new(),
 
@@ -564,7 +564,7 @@ impl Raft {
                 id: self.me as u64,
                 term: req.term,
                 log_index: last_index,
-                log_term: self.raft_log.term(last_index)
+                log_term: self.raft_log.term(last_index),
             }
         } else {
             if PRINT_ELECTION {
@@ -581,7 +581,7 @@ impl Raft {
                 id: self.me as u64,
                 term: self.term,
                 log_index: last_index,
-                log_term: self.raft_log.term(last_index)
+                log_term: self.raft_log.term(last_index),
             }
         }
     }
@@ -781,19 +781,39 @@ impl Raft {
         }
     }
 
-    fn cond_install_snapshot(
+    pub fn cond_install_snapshot(
         &mut self,
         last_included_term: u64,
         last_included_index: u64,
         snapshot: &[u8],
     ) -> bool {
         // Your code here (2D).
-        crate::your_code_here((last_included_term, last_included_index, snapshot));
+        let commit_index = self.raft_log.commit_idx;
+        let commit_term = self.raft_log.term(commit_index);
+        if last_included_term < commit_term || last_included_index < commit_index {
+            return false;
+        }
+
+        self.raft_log = RaftLog::new(last_included_index, last_included_term);
+
+        self.persist();
+
+        self.persister.save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
+
+        true
     }
 
-    fn snapshot(&mut self, index: u64, snapshot: &[u8]) {
+    pub fn snapshot(&mut self, index: u64, snapshot: &[u8]) {
         // Your code here (2D).
-        crate::your_code_here((index, snapshot));
+        assert!(index >= self.raft_log.last_index_in_snapshot);
+        let term = self.raft_log.term(index);
+        let real_index = self.raft_log.real_index(index);
+        let mut remain_entries = self.raft_log.entries.split_off(real_index as usize);
+        std::mem::swap(&mut self.raft_log.entries, &mut remain_entries);
+        self.persist();
+        self.raft_log.last_index_in_snapshot = index;
+        self.raft_log.last_term_in_snapshot = term;
+        self.persister.save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
     }
 
     pub fn is_leader(&self) -> bool {
@@ -806,7 +826,6 @@ impl Raft {
     #[doc(hidden)]
     pub fn __suppress_deadcode(&mut self) {
         let _ = self.cond_install_snapshot(0, 0, &[]);
-        let _ = self.snapshot(0, &[]);
     }
 }
 
