@@ -11,6 +11,7 @@ pub struct Progress {
     pub state: PrState
 }
 
+#[derive(PartialEq, Debug)]
 pub enum PrState {
     NormalState,
     SnapshotState,

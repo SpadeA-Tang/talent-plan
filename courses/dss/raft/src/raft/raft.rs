@@ -364,8 +364,7 @@ impl Raft {
             self.heartbeat_round = 0;
             let pr = self.prs.progress_map.get(&(resp.id as usize)).unwrap();
             if pr.matched_index < self.raft_log.last_index() {
-                let tx = &self.append_entries_router.tx;
-                self.send_append(resp.id as usize, tx.clone());
+                self.send_append(resp.id as usize, self.append_entries_router.tx.clone());
             }
         }
     }
@@ -477,9 +476,10 @@ impl Raft {
         //     data: Vec::new(),
         // });
         // last_index += 1;
-
+        
+        let index = self.raft_log.last_index_in_snapshot;
         self.prs.reset_progress(|id: usize, pr: &mut Progress| {
-            pr.matched_index = 0;
+            pr.matched_index = index;
             pr.next_index = last_index + 1;
             if id == me {
                 pr.matched_index = last_index;
@@ -731,53 +731,77 @@ impl Raft {
         Ok((next_log_index, term))
     }
 
-    fn bcast_append(&self) {
-        let tx = &self.append_entries_router.tx;
-        for &id in &self.peer_ids {
+    fn bcast_append(&mut self) {
+        let peers_id = self.peer_ids.clone();
+        for &id in &peers_id {
             if id == self.me {
                 continue;
             }
-            self.send_append(id, tx.clone());
+            self.send_append(id, self.append_entries_router.tx.clone());
         }
     }
 
-    fn send_append(&self, to: usize, mut sender: UnboundedSender<Reply>) {
+    fn send_append(&mut self, to: usize, mut sender: UnboundedSender<Reply>) {
         let peer = &self.peers[to];
         let peer_clone = peer.clone();
 
-        let mut entries = Vec::new();
-        let pr = self.prs.progress_map.get(&to).unwrap();
-        for log_index in pr.next_index..=self.raft_log.last_index() {
-            entries.push(self.raft_log.get_entry(log_index).clone());
-        }
-        if entries.len() == 0 {
+        let mut pr = self.prs.progress_map.get_mut(&to).unwrap();
+        if pr.state == PrState::SnapshotState {
             return;
         }
 
-        let arg = AppendEntryArgs {
-            id: self.me as u64,
-            term: self.term,
-            lastlog_index: pr.next_index - 1,
-            lastlog_term: self.raft_log.term(pr.next_index - 1),
-            commit_index: self.raft_log.commit_idx,
-            entries,
-        };
-
-        peer.spawn(async move {
-            let res = peer_clone.append_entries(&arg).await.map_err(Error::Rpc);
-            if let Ok(res) = res {
-                let _ = sender.send(Reply::AppendReply(res)).await;
+        // Check the existance of the log entry
+        if pr.next_index <= self.raft_log.last_index_in_snapshot {
+            // case of sending snapshot
+            let snapshot = self.persister.snapshot();
+            let arg = SnapshotArgs {
+                id: self.me as u64,
+                last_included_index: self.raft_log.last_index_in_snapshot,
+                last_included_term: self.raft_log.last_term_in_snapshot,
+                snapshot,
+                term: self.term,
+            };
+            pr.state = PrState::SnapshotState;
+            peer.spawn(async move {
+                let res = peer_clone.install_snapshot(&arg).await.map_err(Error::Rpc);
+                if let Ok(res) = res {
+                    let _ = sender.send(Reply::SnapshotReply(res)).await;
+                }
+            })
+        } else {
+            let mut entries = Vec::new();
+            for log_index in pr.next_index..=self.raft_log.last_index() {
+                entries.push(self.raft_log.get_entry(log_index).clone());
             }
-        });
+            if entries.len() == 0 {
+                return;
+            }
 
-        if PRINT_APPEND {
-            println!(
-                "[{}] send entries from {} to {} to peer {}",
-                self.me,
-                pr.next_index,
-                self.raft_log.last_index(),
-                to
-            );
+            let arg = AppendEntryArgs {
+                id: self.me as u64,
+                term: self.term,
+                lastlog_index: pr.next_index - 1,
+                lastlog_term: self.raft_log.term(pr.next_index - 1),
+                commit_index: self.raft_log.commit_idx,
+                entries,
+            };
+
+            peer.spawn(async move {
+                let res = peer_clone.append_entries(&arg).await.map_err(Error::Rpc);
+                if let Ok(res) = res {
+                    let _ = sender.send(Reply::AppendReply(res)).await;
+                }
+            });
+
+            if PRINT_APPEND {
+                println!(
+                    "[{}] send entries from {} to {} to peer {}",
+                    self.me,
+                    pr.next_index,
+                    self.raft_log.last_index(),
+                    to
+                );
+            }
         }
     }
 
@@ -793,14 +817,30 @@ impl Raft {
         if last_included_term < commit_term || last_included_index < commit_index {
             return false;
         }
-
+        self.become_follower(self.term, self.leader);
         self.raft_log = RaftLog::new(last_included_index, last_included_term);
-
+        
         self.persist();
 
-        self.persister.save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
+        self.persister
+            .save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
 
         true
+    }
+
+    pub fn apply_snapshot(&mut self, arg: SnapshotArgs) -> (bool, u64) {
+        if arg.term < self.term {
+            return (false, 0);
+        }
+        if arg.last_included_index < self.raft_log.commit_idx {
+            return (false, 0);
+        }
+        let _ =self.apply_ch.send(ApplyMsg::Snapshot {
+            data: arg.snapshot,
+            term: arg.last_included_term,
+            index: arg.last_included_index,
+        });
+        (true, arg.last_included_index)
     }
 
     pub fn snapshot(&mut self, index: u64, snapshot: &[u8]) {
@@ -813,7 +853,8 @@ impl Raft {
         self.persist();
         self.raft_log.last_index_in_snapshot = index;
         self.raft_log.last_term_in_snapshot = term;
-        self.persister.save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
+        self.persister
+            .save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
     }
 
     pub fn is_leader(&self) -> bool {
@@ -935,6 +976,7 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
 pub enum Reply {
     AppendReply(AppendEntryReply),
     HeartbeatReply(HeartbeatReply),
+    SnapshotReply(SnapshotReply),
     Shutdown,
 }
 
@@ -958,6 +1000,15 @@ pub fn handle_resp_worker(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Reply>
                         }
 
                         rf_locked.handle_hb_resp(res);
+                    }
+                    Reply::SnapshotReply(res) => {
+                        if !res.reject {
+                            let mut rf_locked = rf.lock().unwrap();
+                            let mut pr = rf_locked.prs.progress_map.get_mut(&(res.id as usize)).unwrap();
+                            pr.state = PrState::NormalState;
+                            pr.matched_index = res.last_included_index;
+                            pr.next_index = res.last_included_index + 1;
+                        }
                     }
                     Reply::Shutdown => return,
                 }

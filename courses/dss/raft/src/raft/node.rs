@@ -199,4 +199,14 @@ impl RaftService for Node {
     async fn append_entries(&self, args: AppendEntryArgs) -> labrpc::Result<AppendEntryReply> {
         Ok(self.raft.lock().unwrap().handle_append_entry(args))
     }
+
+    async fn install_snapshot(&self, args: SnapshotArgs) -> labrpc::Result<SnapshotReply> {
+        let mut rf_locked = self.raft.lock().unwrap();
+        let res = rf_locked.apply_snapshot(args);
+        Ok(SnapshotReply {
+            reject: res.0,
+            id: rf_locked.me as u64,
+            last_included_index: res.1,
+        })
+    }
 }

@@ -4,12 +4,11 @@ pub mod raftpb {
     labrpc::service! {
         service raft {
             rpc request_vote(RequestVoteArgs) returns (RequestVoteReply);
-
             // Your code here if more rpc desired.
             // rpc xxx(yyy) returns (zzz)
             rpc heartbeat(HeartbeatArgs) returns (HeartbeatReply);
-
             rpc append_entries(AppendEntryArgs) returns (AppendEntryReply);
+            rpc install_snapshot(SnapshotArgs) returns (SnapshotReply);
         }
     }
     pub use self::raft::{
