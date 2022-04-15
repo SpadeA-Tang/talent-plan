@@ -12,12 +12,12 @@ use super::errors::*;
 use super::persister::*;
 use super::progress::*;
 
-const ELECTION_TIMEOUT: u64 = 200;
-const HEARTBEAT_TIMEOUT: u64 = 100;
-const SLEEP_DURATION: u64 = 30;
+const ELECTION_TIMEOUT: u64 = 50;
+const HEARTBEAT_TIMEOUT: u64 = 40;
+const SLEEP_DURATION: u64 = 5;
 
-const PRINT_ELECTION: bool = false;
-const PRINT_APPEND: bool = false;
+const PRINT_ELECTION: bool = true;
+const PRINT_APPEND: bool = true;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -393,8 +393,20 @@ impl Raft {
     // todo : handle commit index
     pub fn handle_heartbeat(&mut self, arg: HeartbeatArgs) -> HeartbeatReply {
         if arg.term >= self.term {
+            if PRINT_APPEND {
+                println!(
+                    "[{}] received heartbeat from [{}], term {}, commit index {}",
+                    self.me, arg.id, arg.term, arg.commit_index
+                );
+            }
             self.become_follower(arg.term, Some(arg.id as usize));
             if self.raft_log.commit(arg.commit_index) {
+                if PRINT_APPEND {
+                    println!(
+                        "[{}] update commit index to {}",
+                        self.me, self.raft_log.commit_idx,
+                    );
+                }
                 self.send_apply_flag();
             }
         }
@@ -510,16 +522,27 @@ impl Raft {
         if resp.term == self.term {
             if PRINT_ELECTION {
                 println!(
-                    "[{}] received vote from {} at term {}",
-                    self.me, resp.id, self.term
+                    "[{}] received vote from {} at term {}, {:?}",
+                    self.me, resp.id, self.term, resp
                 );
             }
             self.prs.record_vote(resp.id as usize, resp.grant);
+
+            // If it is rejected by someone, penalty the timeout, which means
+            // more rejections, more penalty.
+            if !resp.grant && self.log_behind(resp.log_term, resp.log_index) {
+                self.randomized_election_timeout += gen_randomized_timeout();
+                println!(
+                    "[{}]'s vote is rejected by [{}] randomzied election timeout now: {}",
+                    self.me, resp.id, self.randomized_election_timeout
+                );
+            }
         }
         self.prs.tally_vote()
     }
 
     pub fn handle_vote_req(&mut self, req: RequestVoteArgs) -> RequestVoteReply {
+        let last_index = self.raft_log.last_index();
         // 首先log一定得up to date，然后是term更大 或者 相等，但是相等的时候要么之前就是投的他或者没投过
         if self.log_up_to_date(req.log_term, req.log_index)
             && (req.term > self.term
@@ -540,6 +563,8 @@ impl Raft {
                 grant: true,
                 id: self.me as u64,
                 term: req.term,
+                log_index: last_index,
+                log_term: self.raft_log.term(last_index)
             }
         } else {
             if PRINT_ELECTION {
@@ -555,6 +580,8 @@ impl Raft {
                 grant: false,
                 id: self.me as u64,
                 term: self.term,
+                log_index: last_index,
+                log_term: self.raft_log.term(last_index)
             }
         }
     }
@@ -569,6 +596,17 @@ impl Raft {
                 println!("Voter's log (term {}, index {}) is not update to date than votee's log (term {}, index {})", 
                     log_term, log_index, self.raft_log.term(last_index), last_index);
             }
+            false
+        }
+    }
+
+    // Is my log is older than `log_term` and `log_index`
+    fn log_behind(&self, log_term: u64, log_index: u64) -> bool {
+        let last_index = self.raft_log.last_index();
+        let last_term = self.raft_log.term(last_index);
+        if last_term < log_term || (last_term == log_term && last_index < log_index) {
+            true
+        } else {
             false
         }
     }
@@ -775,22 +813,20 @@ impl Raft {
 pub fn gen_randomized_timeout() -> u64 {
     let mut rng = rand::thread_rng();
     // 增加随机时间的权重，可以减少拥有old log的node一直成为candidate扰乱选举的现象
-    rng.gen_range(0, ELECTION_TIMEOUT * 3)
+    rng.gen_range(0, ELECTION_TIMEOUT * 20)
 }
 
 pub fn background_worker(rf: Arc<Mutex<Raft>>) {
     // sleep some ms below SLEEP_DURATION
-    let mut rng = rand::thread_rng();
     loop {
-        let sleep_time = rng.gen_range(0, SLEEP_DURATION);
-        thread::sleep(Duration::from_millis(sleep_time));
+        thread::sleep(Duration::from_millis(SLEEP_DURATION));
 
         let mut rf_locked = rf.lock().unwrap();
         if rf_locked.shutdown {
             break;
         }
-        rf_locked.election_elapsed += sleep_time;
-        rf_locked.heartbeat_elapsed += sleep_time;
+        rf_locked.election_elapsed += SLEEP_DURATION;
+        rf_locked.heartbeat_elapsed += SLEEP_DURATION;
         if rf_locked.election_elapsed
             < rf_locked.randomized_election_timeout + rf_locked.election_timeout
         {
@@ -803,6 +839,10 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
             continue;
         }
         rf_locked.randomized_election_timeout = gen_randomized_timeout();
+        println!(
+            "[{}] randomzied election timeout now: {}",
+            rf_locked.me, rf_locked.randomized_election_timeout
+        );
 
         let (mut tx_timeout, mut rx_timeout): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
             unbounded();
@@ -845,6 +885,7 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                         let mut rf_locked = rf.lock().unwrap();
                         let term = rf_locked.term;
                         rf_locked.become_follower(term, None);
+                        println!("[{}] compaign fails due to timeout", rf_locked.me);
                         break;
                     }
                     vote_resp = rx_vote.next() => {
@@ -860,8 +901,10 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                             } else if vote_resp == VoteResult::VoteLost {
                                 let term = rf_locked.term;
                                 rf_locked.become_follower(term, None);
+                                println!("[{}] compaign fails due to rejection, the randomized_election_timeout now is: {}", rf_locked.me, rf_locked.randomized_election_timeout);
                                 break;
                             }
+                            println!("[{}] compaign result {:?}", rf_locked.me, vote_resp);
                         }
                     }
                 };

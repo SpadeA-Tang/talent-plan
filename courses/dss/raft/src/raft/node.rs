@@ -106,6 +106,8 @@ impl Node {
 
         let (index, term) = rf_locked.start(command).unwrap();
 
+        println!("[{}] start command {:?} at index {}", rf_locked.me, command, index);
+
         Ok((index, term))
     }
 

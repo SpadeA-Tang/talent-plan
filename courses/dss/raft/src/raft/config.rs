@@ -283,6 +283,7 @@ impl Config {
     /// if retry==false, calls start() only once, in order
     /// to simplify the early Lab 2B tests.
     pub fn one(&self, cmd: Entry, expected_servers: usize, retry: bool) -> u64 {
+        println!("Initial start command {:?}", cmd);
         let t0 = Instant::now();
         let mut starts = 0;
         while t0.elapsed() < Duration::from_secs(10) {
@@ -411,6 +412,7 @@ impl Config {
             raft::ApplyMsg::Command { data, index } => {
                 // debug!("apply {}", index);
                 let entry = labcodec::decode(&data).expect("committed command is not an entry");
+                println!(" --- Apply {:?} index {}", entry, index);
                 let mut s = storage.lock().unwrap();
                 for (j, log) in s.logs.iter().enumerate() {
                     if let Some(old) = log.get(&index) {
@@ -489,7 +491,7 @@ impl Config {
     /// detach server i from the net.
     pub fn disconnect(&mut self, i: usize) {
         debug!("disconnect({})", i);
-        // println!("disconnect({})", i);
+        println!("disconnect({})", i);
 
         self.connected[i] = false;
 
@@ -508,7 +510,7 @@ impl Config {
     /// attach server i to the net.
     pub fn connect(&mut self, i: usize) {
         debug!("connect({})", i);
-        // println!("connect({})", i);
+        println!("connect({})", i);
 
         self.connected[i] = true;
 

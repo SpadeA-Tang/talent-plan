@@ -19,7 +19,7 @@ pub struct ProgressTracker {
     pub progress_map: HashMap<usize, Progress>,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum VoteResult {
     VotePending,
     VoteLost,
