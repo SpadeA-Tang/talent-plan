@@ -1,1004 +1,276 @@
-0] send entries from 339 to 489 to peer 3
-[0] send entries from 339 to 489 to peer 4
-[0] start command Entry { x: 1986 } at index 489
-[0] start command of index 490 and term 15
-[0] send entries from 356 to 490 to peer 1
-[0] send entries from 2 to 490 to peer 2
-[0] send entries from 339 to 490 to peer 3
-[0] send entries from 339 to 490 to peer 4
-[0] start command Entry { x: 8505 } at index 490
-[3] becomes follower at term 17 commit index 5
-[3] compaign fails due to timeout
-[0] start command of index 491 and term 15
-[0] send entries from 356 to 491 to peer 1
-[0] send entries from 2 to 491 to peer 2
-[0] send entries from 339 to 491 to peer 3
-[0] send entries from 339 to 491 to peer 4
-[0] start command Entry { x: 1949 } at index 491
-[0] start command of index 492 and term 15
-[0] send entries from 356 to 492 to peer 1
-[0] send entries from 2 to 492 to peer 2
-[0] send entries from 339 to 492 to peer 3
-[0] send entries from 339 to 492 to peer 4
-[0] start command Entry { x: 2873 } at index 492
-[0] start command of index 493 and term 15
-[0] send entries from 356 to 493 to peer 1
-[0] send entries from 2 to 493 to peer 2
-[0] send entries from 339 to 493 to peer 3
-[0] send entries from 339 to 493 to peer 4
-[0] start command Entry { x: 7317 } at index 493
-[0] start command of index 494 and term 15
-[0] send entries from 356 to 494 to peer 1
-[0] send entries from 2 to 494 to peer 2
-[0] send entries from 339 to 494 to peer 3
-[0] send entries from 339 to 494 to peer 4
-[0] start command Entry { x: 4028 } at index 494
-[0] start command of index 495 and term 15
-[0] send entries from 356 to 495 to peer 1
-[0] send entries from 2 to 495 to peer 2
-[0] send entries from 339 to 495 to peer 3
-[0] send entries from 339 to 495 to peer 4
-[0] start command Entry { x: 8081 } at index 495
-[0] start command of index 496 and term 15
-[0] send entries from 356 to 496 to peer 1
-[0] send entries from 2 to 496 to peer 2
-[0] send entries from 339 to 496 to peer 3
-[0] send entries from 339 to 496 to peer 4
-[0] start command Entry { x: 6358 } at index 496
-[0] start command of index 497 and term 15
-[0] send entries from 356 to 497 to peer 1
-[0] send entries from 2 to 497 to peer 2
-[0] send entries from 339 to 497 to peer 3
-[0] send entries from 339 to 497 to peer 4
-[0] start command Entry { x: 4935 } at index 497
-[0] start command of index 498 and term 15
-[0] send entries from 356 to 498 to peer 1
-[0] send entries from 2 to 498 to peer 2
-[0] send entries from 339 to 498 to peer 3
-[0] send entries from 339 to 498 to peer 4
-[0] start command Entry { x: 4876 } at index 498
-[4] randomzied election timeout now: 395
-[4] becomes candidate at term 17
-[0] start command of index 499 and term 15
-[0] send entries from 356 to 499 to peer 1
-[0] send entries from 2 to 499 to peer 2
-[0] send entries from 339 to 499 to peer 3
-[0] send entries from 339 to 499 to peer 4
-[0] start command Entry { x: 2251 } at index 499
-[2] grant vote for 4 at term 15 candidate[4]'s log (index 594, term 11), follower[2]'s log (index342, term3)
-[2] becomes follower at term 17 commit index 5
-[0] start command of index 500 and term 15
-[0] send entries from 356 to 500 to peer 1
-[0] send entries from 2 to 500 to peer 2
-[0] send entries from 339 to 500 to peer 3
-[4] received vote from 2 at term 17, RequestVoteReply { grant: true, id: 2, term: 17, log_term: 3, log_index: 342 }
-[4] compaign result VotePending
-[0] send entries from 339 to 500 to peer 4
-[0] start command Entry { x: 3492 } at index 500
-Voter's log (term 11, index 594) is not update to date than votee's log (term 15, index 355)
-[1] reject vote for 4 at term 16
-[1] becomes follower at term 17 commit index 6
-[4] received vote from 1 at term 17, RequestVoteReply { grant: false, id: 1, term: 17, log_term: 15, log_index: 355 }
-[4]'s vote is rejected by [1] randomzied election timeout now: 1277
-[4] compaign result VotePending
-[0] start command of index 501 and term 15
-[0] send entries from 356 to 501 to peer 1
-[0] send entries from 2 to 501 to peer 2
-[0] send entries from 339 to 501 to peer 3
-[0] send entries from 339 to 501 to peer 4
-[0] start command Entry { x: 5508 } at index 501
-[0] start command of index 502 and term 15
-[0] send entries from 356 to 502 to peer 1
-[0] send entries from 2 to 502 to peer 2
-[0] send entries from 339 to 502 to peer 3
-[0] send entries from 339 to 502 to peer 4
-[0] start command Entry { x: 7635 } at index 502
-[0] start command of index 503 and term 15
-[0] send entries from 356 to 503 to peer 1
-[0] send entries from 2 to 503 to peer 2
-[0] send entries from 339 to 503 to peer 3
-[0] send entries from 339 to 503 to peer 4
-[0] start command Entry { x: 2959 } at index 503
-[0] start command of index 504 and term 15
-[0] send entries from 356 to 504 to peer 1
-[0] send entries from 2 to 504 to peer 2
-[0] send entries from 339 to 504 to peer 3
-[0] send entries from 339 to 504 to peer 4
-[0] start command Entry { x: 9381 } at index 504
-[0] start command of index 505 and term 15
-[0] send entries from 356 to 505 to peer 1
-[0] send entries from 2 to 505 to peer 2
-[0] send entries from 339 to 505 to peer 3
-[0] send entries from 339 to 505 to peer 4
-[0] start command Entry { x: 7966 } at index 505
-[0] start command of index 506 and term 15
-[0] send entries from 356 to 506 to peer 1
-[0] send entries from 2 to 506 to peer 2
-[0] send entries from 339 to 506 to peer 3
-[0] send entries from 339 to 506 to peer 4
-[0] start command Entry { x: 7452 } at index 506
-[0] start command of index 507 and term 15
-[0] send entries from 356 to 507 to peer 1
-[0] send entries from 2 to 507 to peer 2
-[0] send entries from 339 to 507 to peer 3
-[0] send entries from 339 to 507 to peer 4
-[0] start command Entry { x: 9316 } at index 507
-[0] start command of index 508 and term 15
-[0] send entries from 356 to 508 to peer 1
-[0] send entries from 2 to 508 to peer 2
-[0] send entries from 339 to 508 to peer 3
-[0] send entries from 339 to 508 to peer 4
-[0] start command Entry { x: 2531 } at index 508
-[0] start command of index 509 and term 15
-[0] send entries from 356 to 509 to peer 1
-[0] send entries from 2 to 509 to peer 2
-[0] send entries from 339 to 509 to peer 3
-[0] send entries from 339 to 509 to peer 4
-[0] start command Entry { x: 4136 } at index 509
-[4] becomes follower at term 17 commit index 333
-[4] compaign fails due to timeout
-[0] start command of index 510 and term 15
-[0] send entries from 356 to 510 to peer 1
-[0] send entries from 2 to 510 to peer 2
-[0] send entries from 339 to 510 to peer 3
-[0] send entries from 339 to 510 to peer 4
-[0] start command Entry { x: 2160 } at index 510
-[0] start command of index 511 and term 15
-[0] send entries from 356 to 511 to peer 1
-[0] send entries from 2 to 511 to peer 2
-[0] send entries from 339 to 511 to peer 3
-[0] send entries from 339 to 511 to peer 4
-[0] start command Entry { x: 6284 } at index 511
-[0] start command of index 512 and term 15
-[0] send entries from 356 to 512 to peer 1
-[0] send entries from 2 to 512 to peer 2
-[0] send entries from 339 to 512 to peer 3
-[0] send entries from 339 to 512 to peer 4
-[0] start command Entry { x: 5913 } at index 512
-[0] start command of index 513 and term 15
-[0] send entries from 356 to 513 to peer 1
-[0] send entries from 2 to 513 to peer 2
-[0] send entries from 339 to 513 to peer 3
-[0] send entries from 339 to 513 to peer 4
-[0] start command Entry { x: 1433 } at index 513
-[0] start command of index 514 and term 15
-[0] send entries from 356 to 514 to peer 1
-[0] send entries from 2 to 514 to peer 2
-[0] send entries from 339 to 514 to peer 3
-[0] send entries from 339 to 514 to peer 4
-[0] start command Entry { x: 2016 } at index 514
-[0] start command of index 515 and term 15
-[0] send entries from 356 to 515 to peer 1
-[0] send entries from 2 to 515 to peer 2
-[0] send entries from 339 to 515 to peer 3
-[0] send entries from 339 to 515 to peer 4
-[0] start command Entry { x: 3164 } at index 515
-[0] start command of index 516 and term 15
-[0] send entries from 356 to 516 to peer 1
-[0] send entries from 2 to 516 to peer 2
-[0] send entries from 339 to 516 to peer 3
-[0] send entries from 339 to 516 to peer 4
-[0] start command Entry { x: 4832 } at index 516
-[0] start command of index 517 and term 15
-[0] send entries from 356 to 517 to peer 1
-[0] send entries from 2 to 517 to peer 2
-[0] send entries from 339 to 517 to peer 3
-[0] send entries from 339 to 517 to peer 4
-[0] start command Entry { x: 8384 } at index 517
-[0] start command of index 518 and term 15
-[0] send entries from 356 to 518 to peer 1
-[0] send entries from 2 to 518 to peer 2
-[0] send entries from 339 to 518 to peer 3
-[0] send entries from 339 to 518 to peer 4
-[0] start command Entry { x: 6762 } at index 518
-[0] start command of index 519 and term 15
-[0] send entries from 356 to 519 to peer 1
-[0] send entries from 2 to 519 to peer 2
-[0] send entries from 339 to 519 to peer 3
-[0] send entries from 339 to 519 to peer 4
-[0] start command Entry { x: 7274 } at index 519
-[0] start command of index 520 and term 15
-[0] send entries from 356 to 520 to peer 1
-[0] send entries from 2 to 520 to peer 2
-[0] send entries from 339 to 520 to peer 3
-[0] send entries from 339 to 520 to peer 4
-[0] start command Entry { x: 2240 } at index 520
-[0] start command of index 521 and term 15
-[0] send entries from 356 to 521 to peer 1
-[0] send entries from 2 to 521 to peer 2
-[0] send entries from 339 to 521 to peer 3
-[0] send entries from 339 to 521 to peer 4
-[0] start command Entry { x: 4221 } at index 521
-[0] start command of index 522 and term 15
-[0] send entries from 356 to 522 to peer 1
-[0] send entries from 2 to 522 to peer 2
-[0] send entries from 339 to 522 to peer 3
-[0] send entries from 339 to 522 to peer 4
-[0] start command Entry { x: 4585 } at index 522
-[0] start command of index 523 and term 15
-[0] send entries from 356 to 523 to peer 1
-[0] send entries from 2 to 523 to peer 2
-[0] send entries from 339 to 523 to peer 3
-[0] send entries from 339 to 523 to peer 4
-[0] start command Entry { x: 8168 } at index 523
-[0] start command of index 524 and term 15
-[0] send entries from 356 to 524 to peer 1
-[0] send entries from 2 to 524 to peer 2
-[0] send entries from 339 to 524 to peer 3
-[0] send entries from 339 to 524 to peer 4
-[0] start command Entry { x: 6150 } at index 524
-[0] start command of index 525 and term 15
-[0] send entries from 356 to 525 to peer 1
-[0] send entries from 2 to 525 to peer 2
-[0] send entries from 339 to 525 to peer 3
-[0] send entries from 339 to 525 to peer 4
-[0] start command Entry { x: 6543 } at index 525
-[0] start command of index 526 and term 15
-[0] send entries from 356 to 526 to peer 1
-[0] send entries from 2 to 526 to peer 2
-[0] send entries from 339 to 526 to peer 3
-[0] send entries from 339 to 526 to peer 4
-[0] start command Entry { x: 5941 } at index 526
-[0] start command of index 527 and term 15
-[0] send entries from 356 to 527 to peer 1
-[0] send entries from 2 to 527 to peer 2
-[0] send entries from 339 to 527 to peer 3
-[0] send entries from 339 to 527 to peer 4
-[0] start command Entry { x: 131 } at index 527
-[0] start command of index 528 and term 15
-[0] send entries from 356 to 528 to peer 1
-[0] send entries from 2 to 528 to peer 2
-[0] send entries from 339 to 528 to peer 3
-[0] send entries from 339 to 528 to peer 4
-[0] start command Entry { x: 335 } at index 528
-[0] start command of index 529 and term 15
-[0] send entries from 356 to 529 to peer 1
-[0] send entries from 2 to 529 to peer 2
-[0] send entries from 339 to 529 to peer 3
-[0] send entries from 339 to 529 to peer 4
-[0] start command Entry { x: 3119 } at index 529
-[0] start command of index 530 and term 15
-[0] send entries from 356 to 530 to peer 1
-[0] send entries from 2 to 530 to peer 2
-[0] send entries from 339 to 530 to peer 3
-[0] send entries from 339 to 530 to peer 4
-[0] start command Entry { x: 6212 } at index 530
-[0] start command of index 531 and term 15
-[0] send entries from 356 to 531 to peer 1
-[0] send entries from 2 to 531 to peer 2
-[0] send entries from 339 to 531 to peer 3
-[0] send entries from 339 to 531 to peer 4
-[0] start command Entry { x: 3028 } at index 531
-[0] start command of index 532 and term 15
-[0] send entries from 356 to 532 to peer 1
-[0] send entries from 2 to 532 to peer 2
-[0] send entries from 339 to 532 to peer 3
-[0] send entries from 339 to 532 to peer 4
-[0] start command Entry { x: 792 } at index 532
-[0] start command of index 533 and term 15
-[0] send entries from 356 to 533 to peer 1
-[0] send entries from 2 to 533 to peer 2
-[0] send entries from 339 to 533 to peer 3
-[0] send entries from 339 to 533 to peer 4
-[0] start command Entry { x: 733 } at index 533
-[0] start command of index 534 and term 15
-[0] send entries from 356 to 534 to peer 1
-[0] send entries from 2 to 534 to peer 2
-[0] send entries from 339 to 534 to peer 3
-[0] send entries from 339 to 534 to peer 4
-[0] start command Entry { x: 506 } at index 534
-[0] start command of index 535 and term 15
-[0] send entries from 356 to 535 to peer 1
-[0] send entries from 2 to 535 to peer 2
-[0] send entries from 339 to 535 to peer 3
-[0] send entries from 339 to 535 to peer 4
-[0] start command Entry { x: 7942 } at index 535
-[0] start command of index 536 and term 15
-[0] send entries from 356 to 536 to peer 1
-[0] send entries from 2 to 536 to peer 2
-[0] send entries from 339 to 536 to peer 3
-[0] send entries from 339 to 536 to peer 4
-[0] start command Entry { x: 1283 } at index 536
-[0] start command of index 537 and term 15
-[0] send entries from 356 to 537 to peer 1
-[0] send entries from 2 to 537 to peer 2
-[0] send entries from 339 to 537 to peer 3
-[0] send entries from 339 to 537 to peer 4
-[0] start command Entry { x: 2576 } at index 537
-[0] start command of index 538 and term 15
-[0] send entries from 356 to 538 to peer 1
-[0] send entries from 2 to 538 to peer 2
-[0] send entries from 339 to 538 to peer 3
-[0] send entries from 339 to 538 to peer 4
-[0] start command Entry { x: 8049 } at index 538
-[0] start command of index 539 and term 15
-[0] send entries from 356 to 539 to peer 1
-[0] send entries from 2 to 539 to peer 2
-[0] send entries from 339 to 539 to peer 3
-[0] send entries from 339 to 539 to peer 4
-[0] start command Entry { x: 9552 } at index 539
-[0] start command of index 540 and term 15
-[0] send entries from 356 to 540 to peer 1
-[0] send entries from 2 to 540 to peer 2
-[0] send entries from 339 to 540 to peer 3
-[0] send entries from 339 to 540 to peer 4
-[0] start command Entry { x: 3146 } at index 540
-[0] start command of index 541 and term 15
-[0] send entries from 356 to 541 to peer 1
-[0] send entries from 2 to 541 to peer 2
-[0] send entries from 339 to 541 to peer 3
-[0] send entries from 339 to 541 to peer 4
-[0] start command Entry { x: 5883 } at index 541
-[0] start command of index 542 and term 15
-[0] send entries from 356 to 542 to peer 1
-[0] send entries from 2 to 542 to peer 2
-[0] send entries from 339 to 542 to peer 3
-[0] send entries from 339 to 542 to peer 4
-[0] start command Entry { x: 6542 } at index 542
-[0] start command of index 543 and term 15
-[0] send entries from 356 to 543 to peer 1
-[0] send entries from 2 to 543 to peer 2
-[0] send entries from 339 to 543 to peer 3
-[0] send entries from 339 to 543 to peer 4
-[0] start command Entry { x: 4447 } at index 543
-[0] start command of index 544 and term 15
-[0] send entries from 356 to 544 to peer 1
-[0] send entries from 2 to 544 to peer 2
-[0] send entries from 339 to 544 to peer 3
-[0] send entries from 339 to 544 to peer 4
-[0] start command Entry { x: 282 } at index 544
-[0] start command of index 545 and term 15
-[0] send entries from 356 to 545 to peer 1
-[0] send entries from 2 to 545 to peer 2
-[0] send entries from 339 to 545 to peer 3
-[0] send entries from 339 to 545 to peer 4
-[0] start command Entry { x: 1271 } at index 545
-[0] start command of index 546 and term 15
-[0] send entries from 356 to 546 to peer 1
-[0] send entries from 2 to 546 to peer 2
-[0] send entries from 339 to 546 to peer 3
-[0] send entries from 339 to 546 to peer 4
-[0] start command Entry { x: 3406 } at index 546
-[0] start command of index 547 and term 15
-[0] send entries from 356 to 547 to peer 1
-[0] send entries from 2 to 547 to peer 2
-[0] send entries from 339 to 547 to peer 3
-[0] send entries from 339 to 547 to peer 4
-[0] start command Entry { x: 5051 } at index 547
-[0] start command of index 548 and term 15
-[0] send entries from 356 to 548 to peer 1
-[0] send entries from 2 to 548 to peer 2
-[0] send entries from 339 to 548 to peer 3
-[0] send entries from 339 to 548 to peer 4
-[0] start command Entry { x: 671 } at index 548
-[0] start command of index 549 and term 15
-[0] send entries from 356 to 549 to peer 1
-[0] send entries from 2 to 549 to peer 2
-[0] send entries from 339 to 549 to peer 3
-[0] send entries from 339 to 549 to peer 4
-[0] start command Entry { x: 5401 } at index 549
-[0] start command of index 550 and term 15
-[0] send entries from 356 to 550 to peer 1
-[0] send entries from 2 to 550 to peer 2
-[0] send entries from 339 to 550 to peer 3
-[0] send entries from 339 to 550 to peer 4
-[0] start command Entry { x: 5054 } at index 550
-[0] start command of index 551 and term 15
-[0] send entries from 356 to 551 to peer 1
-[0] send entries from 2 to 551 to peer 2
-[0] send entries from 339 to 551 to peer 3
-[0] send entries from 339 to 551 to peer 4
-[0] start command Entry { x: 3372 } at index 551
-[0] start command of index 552 and term 15
-[0] send entries from 356 to 552 to peer 1
-[0] send entries from 2 to 552 to peer 2
-[0] send entries from 339 to 552 to peer 3
-[0] send entries from 339 to 552 to peer 4
-[0] start command Entry { x: 9586 } at index 552
-[0] start command of index 553 and term 15
-[0] send entries from 356 to 553 to peer 1
-[0] send entries from 2 to 553 to peer 2
-[0] send entries from 339 to 553 to peer 3
-[0] send entries from 339 to 553 to peer 4
-[0] start command Entry { x: 4344 } at index 553
-[0] start command of index 554 and term 15
-[0] send entries from 356 to 554 to peer 1
-[0] send entries from 2 to 554 to peer 2
-[0] send entries from 339 to 554 to peer 3
-[0] send entries from 339 to 554 to peer 4
-[0] start command Entry { x: 481 } at index 554
-[0] start command of index 555 and term 15
-[0] send entries from 356 to 555 to peer 1
-[0] send entries from 2 to 555 to peer 2
-[0] send entries from 339 to 555 to peer 3
-[0] send entries from 339 to 555 to peer 4
-[0] start command Entry { x: 4408 } at index 555
-[0] start command of index 556 and term 15
-[0] send entries from 356 to 556 to peer 1
-[0] send entries from 2 to 556 to peer 2
-[0] send entries from 339 to 556 to peer 3
-[0] send entries from 339 to 556 to peer 4
-[0] start command Entry { x: 3744 } at index 556
-[0] start command of index 557 and term 15
-[0] send entries from 356 to 557 to peer 1
-[0] send entries from 2 to 557 to peer 2
-[0] send entries from 339 to 557 to peer 3
-[0] send entries from 339 to 557 to peer 4
-[0] start command Entry { x: 4095 } at index 557
-[0] start command of index 558 and term 15
-[0] send entries from 356 to 558 to peer 1
-[0] send entries from 2 to 558 to peer 2
-[0] send entries from 339 to 558 to peer 3
-[0] send entries from 339 to 558 to peer 4
-[0] start command Entry { x: 4095 } at index 558
-[0] start command of index 559 and term 15
-[0] send entries from 356 to 559 to peer 1
-[0] send entries from 2 to 559 to peer 2
-[0] send entries from 339 to 559 to peer 3
-[0] send entries from 339 to 559 to peer 4
-[0] start command Entry { x: 4611 } at index 559
-[0] start command of index 560 and term 15
-[0] send entries from 356 to 560 to peer 1
-[0] send entries from 2 to 560 to peer 2
-[0] send entries from 339 to 560 to peer 3
-[0] send entries from 339 to 560 to peer 4
-[0] start command Entry { x: 3120 } at index 560
-[3] randomzied election timeout now: 943
-[3] becomes candidate at term 18
-[0] start command of index 561 and term 15
-[0] send entries from 356 to 561 to peer 1
-[0] send entries from 2 to 561 to peer 2
-[0] send entries from 339 to 561 to peer 3
-[0] send entries from 339 to 561 to peer 4
-[0] start command Entry { x: 1 } at index 561
-[0] start command of index 562 and term 15
-[0] send entries from 356 to 562 to peer 1
-[0] send entries from 2 to 562 to peer 2
-[0] send entries from 339 to 562 to peer 3
-[0] send entries from 339 to 562 to peer 4
-[0] start command Entry { x: 5604 } at index 562
-[0] start command of index 563 and term 15
-[0] send entries from 356 to 563 to peer 1
-[0] send entries from 2 to 563 to peer 2
-[0] send entries from 339 to 563 to peer 3
-[0] send entries from 339 to 563 to peer 4
-[0] start command Entry { x: 8238 } at index 563
-[0] start command of index 564 and term 15
-[0] send entries from 356 to 564 to peer 1
-[0] send entries from 2 to 564 to peer 2
-[0] send entries from 339 to 564 to peer 3
-[0] send entries from 339 to 564 to peer 4
-[0] start command Entry { x: 7734 } at index 564
-[0] start command of index 565 and term 15
-[0] send entries from 356 to 565 to peer 1
-[0] send entries from 2 to 565 to peer 2
-[0] send entries from 339 to 565 to peer 3
-[0] send entries from 339 to 565 to peer 4
-[0] start command Entry { x: 184 } at index 565
-[0] start command of index 566 and term 15
-[0] send entries from 356 to 566 to peer 1
-[0] send entries from 2 to 566 to peer 2
-[0] send entries from 339 to 566 to peer 3
-[0] send entries from 339 to 566 to peer 4
-[0] start command Entry { x: 1439 } at index 566
-[0] start command of index 567 and term 15
-[0] send entries from 356 to 567 to peer 1
-[0] send entries from 2 to 567 to peer 2
-[0] send entries from 339 to 567 to peer 3
-[0] send entries from 339 to 567 to peer 4
-[0] start command Entry { x: 3633 } at index 567
-[0] start command of index 568 and term 15
-[0] send entries from 356 to 568 to peer 1
-[0] send entries from 2 to 568 to peer 2
-[0] send entries from 339 to 568 to peer 3
-[0] send entries from 339 to 568 to peer 4
-[0] start command Entry { x: 6338 } at index 568
-[0] start command of index 569 and term 15
-[0] send entries from 356 to 569 to peer 1
-[0] send entries from 2 to 569 to peer 2
-[0] send entries from 339 to 569 to peer 3
-[0] send entries from 339 to 569 to peer 4
-[0] start command Entry { x: 625 } at index 569
-[0] start command of index 570 and term 15
-[0] send entries from 356 to 570 to peer 1
-[0] send entries from 2 to 570 to peer 2
-[0] send entries from 339 to 570 to peer 3
-[0] send entries from 339 to 570 to peer 4
-[0] start command Entry { x: 7445 } at index 570
-[0] start command of index 571 and term 15
-[0] send entries from 356 to 571 to peer 1
-[0] send entries from 2 to 571 to peer 2
-[0] send entries from 339 to 571 to peer 3
-[0] send entries from 339 to 571 to peer 4
-[0] start command Entry { x: 986 } at index 571
-[0] start command of index 572 and term 15
-[0] send entries from 356 to 572 to peer 1
-[0] send entries from 2 to 572 to peer 2
-[0] send entries from 339 to 572 to peer 3
-[0] send entries from 339 to 572 to peer 4
-[0] start command Entry { x: 4844 } at index 572
-[0] start command of index 573 and term 15
-[0] send entries from 356 to 573 to peer 1
-[0] send entries from 2 to 573 to peer 2
-[0] send entries from 339 to 573 to peer 3
-[0] send entries from 339 to 573 to peer 4
-[0] start command Entry { x: 672 } at index 573
-[0] start command of index 574 and term 15
-[0] send entries from 356 to 574 to peer 1
-[0] send entries from 2 to 574 to peer 2
-[0] send entries from 339 to 574 to peer 3
-[0] send entries from 339 to 574 to peer 4
-[0] start command Entry { x: 74 } at index 574
-[0] start command of index 575 and term 15
-[0] send entries from 356 to 575 to peer 1
-[0] send entries from 2 to 575 to peer 2
-[0] send entries from 339 to 575 to peer 3
-[0] send entries from 339 to 575 to peer 4
-[0] start command Entry { x: 7197 } at index 575
-[0] start command of index 576 and term 15
-[0] send entries from 356 to 576 to peer 1
-[0] send entries from 2 to 576 to peer 2
-[0] send entries from 339 to 576 to peer 3
-[0] send entries from 339 to 576 to peer 4
-[0] start command Entry { x: 8395 } at index 576
-[0] start command of index 577 and term 15
-[0] send entries from 356 to 577 to peer 1
-[0] send entries from 2 to 577 to peer 2
-[0] send entries from 339 to 577 to peer 3
-[0] send entries from 339 to 577 to peer 4
-[0] start command Entry { x: 7885 } at index 577
-[0] start command of index 578 and term 15
-[0] send entries from 356 to 578 to peer 1
-[0] send entries from 2 to 578 to peer 2
-[0] send entries from 339 to 578 to peer 3
-[0] send entries from 339 to 578 to peer 4
-[0] start command Entry { x: 8374 } at index 578
-[0] start command of index 579 and term 15
-[0] send entries from 356 to 579 to peer 1
-[0] send entries from 2 to 579 to peer 2
-[0] send entries from 339 to 579 to peer 3
-[0] send entries from 339 to 579 to peer 4
-[0] start command Entry { x: 8581 } at index 579
-[0] start command of index 580 and term 15
-[0] send entries from 356 to 580 to peer 1
-[0] send entries from 2 to 580 to peer 2
-[0] send entries from 339 to 580 to peer 3
-[0] send entries from 339 to 580 to peer 4
-[0] start command Entry { x: 7164 } at index 580
-[0] start command of index 581 and term 15
-[0] send entries from 356 to 581 to peer 1
-[0] send entries from 2 to 581 to peer 2
-[0] send entries from 339 to 581 to peer 3
-[0] send entries from 339 to 581 to peer 4
-[0] start command Entry { x: 6893 } at index 581
-[0] start command of index 582 and term 15
-[0] send entries from 356 to 582 to peer 1
-[0] send entries from 2 to 582 to peer 2
-[0] send entries from 339 to 582 to peer 3
-[0] send entries from 339 to 582 to peer 4
-[0] start command Entry { x: 8282 } at index 582
-[0] start command of index 583 and term 15
-[0] send entries from 356 to 583 to peer 1
-[0] send entries from 2 to 583 to peer 2
-[0] send entries from 339 to 583 to peer 3
-[0] send entries from 339 to 583 to peer 4
-[0] start command Entry { x: 2057 } at index 583
-[0] start command of index 584 and term 15
-[0] send entries from 356 to 584 to peer 1
-[0] send entries from 2 to 584 to peer 2
-[0] send entries from 339 to 584 to peer 3
-[0] send entries from 339 to 584 to peer 4
-[0] start command Entry { x: 1620 } at index 584
-[0] start command of index 585 and term 15
-[0] send entries from 356 to 585 to peer 1
-[0] send entries from 2 to 585 to peer 2
-[0] send entries from 339 to 585 to peer 3
-[0] send entries from 339 to 585 to peer 4
-[0] start command Entry { x: 4661 } at index 585
-[0] start command of index 586 and term 15
-[0] send entries from 356 to 586 to peer 1
-[0] send entries from 2 to 586 to peer 2
-[0] send entries from 339 to 586 to peer 3
-[0] send entries from 339 to 586 to peer 4
-[0] start command Entry { x: 8021 } at index 586
-[0] start command of index 587 and term 15
-[0] send entries from 356 to 587 to peer 1
-[0] send entries from 2 to 587 to peer 2
-[0] send entries from 339 to 587 to peer 3
-[0] send entries from 339 to 587 to peer 4
-[0] start command Entry { x: 3736 } at index 587
-[0] start command of index 588 and term 15
-[0] send entries from 356 to 588 to peer 1
-[0] send entries from 2 to 588 to peer 2
-[0] send entries from 339 to 588 to peer 3
-[0] send entries from 339 to 588 to peer 4
-[0] start command Entry { x: 9214 } at index 588
-[0] start command of index 589 and term 15
-[0] send entries from 356 to 589 to peer 1
-[0] send entries from 2 to 589 to peer 2
-[0] send entries from 339 to 589 to peer 3
-[0] send entries from 339 to 589 to peer 4
-[0] start command Entry { x: 4520 } at index 589
-[0] start command of index 590 and term 15
-[0] send entries from 356 to 590 to peer 1
-[0] send entries from 2 to 590 to peer 2
-[0] send entries from 339 to 590 to peer 3
-[0] send entries from 339 to 590 to peer 4
-[0] start command Entry { x: 7533 } at index 590
-[0] start command of index 591 and term 15
-[0] send entries from 356 to 591 to peer 1
-[0] send entries from 2 to 591 to peer 2
-[0] send entries from 339 to 591 to peer 3
-[0] send entries from 339 to 591 to peer 4
-[0] start command Entry { x: 7901 } at index 591
-[0] start command of index 592 and term 15
-[0] send entries from 356 to 592 to peer 1
-[0] send entries from 2 to 592 to peer 2
-[0] send entries from 339 to 592 to peer 3
-[0] send entries from 339 to 592 to peer 4
-[0] start command Entry { x: 2872 } at index 592
-[0] start command of index 593 and term 15
-[0] send entries from 356 to 593 to peer 1
-[0] send entries from 2 to 593 to peer 2
-[0] send entries from 339 to 593 to peer 3
-[0] send entries from 339 to 593 to peer 4
-[0] start command Entry { x: 8429 } at index 593
-[0] start command of index 594 and term 15
-[0] send entries from 356 to 594 to peer 1
-[0] send entries from 2 to 594 to peer 2
-[0] send entries from 339 to 594 to peer 3
-[0] send entries from 339 to 594 to peer 4
-[0] start command Entry { x: 7242 } at index 594
-[0] start command of index 595 and term 15
-[0] send entries from 356 to 595 to peer 1
-[0] send entries from 2 to 595 to peer 2
-[0] send entries from 339 to 595 to peer 3
-[0] send entries from 339 to 595 to peer 4
-[0] start command Entry { x: 2703 } at index 595
-[0] start command of index 596 and term 15
-[0] send entries from 356 to 596 to peer 1
-[0] send entries from 2 to 596 to peer 2
-[0] send entries from 339 to 596 to peer 3
-[0] send entries from 339 to 596 to peer 4
-[0] start command Entry { x: 3880 } at index 596
-[0] start command of index 597 and term 15
-[0] send entries from 356 to 597 to peer 1
-[0] send entries from 2 to 597 to peer 2
-[0] send entries from 339 to 597 to peer 3
-[0] send entries from 339 to 597 to peer 4
-[0] start command Entry { x: 4407 } at index 597
-[0] start command of index 598 and term 15
-[0] send entries from 356 to 598 to peer 1
-[0] send entries from 2 to 598 to peer 2
-[0] send entries from 339 to 598 to peer 3
-[0] send entries from 339 to 598 to peer 4
-[0] start command Entry { x: 5793 } at index 598
-[3] becomes follower at term 18 commit index 5
-[3] compaign fails due to timeout
-[0] start command of index 599 and term 15
-[0] send entries from 356 to 599 to peer 1
-[0] send entries from 2 to 599 to peer 2
-[0] send entries from 339 to 599 to peer 3
-[0] send entries from 339 to 599 to peer 4
-[0] start command Entry { x: 4073 } at index 599
-[0] start command of index 600 and term 15
-[0] send entries from 356 to 600 to peer 1
-[0] send entries from 2 to 600 to peer 2
-[0] send entries from 339 to 600 to peer 3
-[0] send entries from 339 to 600 to peer 4
-[0] start command Entry { x: 8105 } at index 600
-[0] start command of index 601 and term 15
-[0] send entries from 356 to 601 to peer 1
-[0] send entries from 2 to 601 to peer 2
-[0] send entries from 339 to 601 to peer 3
-[0] send entries from 339 to 601 to peer 4
-[0] start command Entry { x: 7393 } at index 601
-[0] start command of index 602 and term 15
-[0] send entries from 356 to 602 to peer 1
-[0] send entries from 2 to 602 to peer 2
-[0] send entries from 339 to 602 to peer 3
-[0] send entries from 339 to 602 to peer 4
-[0] start command Entry { x: 5578 } at index 602
-[0] start command of index 603 and term 15
-[0] send entries from 356 to 603 to peer 1
-[0] send entries from 2 to 603 to peer 2
-[0] send entries from 339 to 603 to peer 3
-[0] send entries from 339 to 603 to peer 4
-[0] start command Entry { x: 7867 } at index 603
-[0] start command of index 604 and term 15
-[0] send entries from 356 to 604 to peer 1
-[0] send entries from 2 to 604 to peer 2
-[0] send entries from 339 to 604 to peer 3
-[0] send entries from 339 to 604 to peer 4
-[0] start command Entry { x: 8926 } at index 604
-[0] start command of index 605 and term 15
-[0] send entries from 356 to 605 to peer 1
-[0] send entries from 2 to 605 to peer 2
-[0] send entries from 339 to 605 to peer 3
-[0] send entries from 339 to 605 to peer 4
-[0] start command Entry { x: 1008 } at index 605
-[0] start command of index 606 and term 15
-[0] send entries from 356 to 606 to peer 1
-[0] send entries from 2 to 606 to peer 2
-[0] send entries from 339 to 606 to peer 3
-[0] send entries from 339 to 606 to peer 4
-[0] start command Entry { x: 2487 } at index 606
-[0] start command of index 607 and term 15
-[0] send entries from 356 to 607 to peer 1
-[0] send entries from 2 to 607 to peer 2
-[0] send entries from 339 to 607 to peer 3
-[0] send entries from 339 to 607 to peer 4
-[0] start command Entry { x: 9868 } at index 607
-[0] start command of index 608 and term 15
-[0] send entries from 356 to 608 to peer 1
-[0] send entries from 2 to 608 to peer 2
-[0] send entries from 339 to 608 to peer 3
-[0] send entries from 339 to 608 to peer 4
-[0] start command Entry { x: 3122 } at index 608
-[0] start command of index 609 and term 15
-[0] send entries from 356 to 609 to peer 1
-[0] send entries from 2 to 609 to peer 2
-[0] send entries from 339 to 609 to peer 3
-[0] send entries from 339 to 609 to peer 4
-[0] start command Entry { x: 442 } at index 609
-[0] start command of index 610 and term 15
-[0] send entries from 356 to 610 to peer 1
-[0] send entries from 2 to 610 to peer 2
-[0] send entries from 339 to 610 to peer 3
-[0] send entries from 339 to 610 to peer 4
-[0] start command Entry { x: 2709 } at index 610
-[0] start command of index 611 and term 15
-[0] send entries from 356 to 611 to peer 1
-[0] send entries from 2 to 611 to peer 2
-[0] send entries from 339 to 611 to peer 3
-[0] send entries from 339 to 611 to peer 4
-[0] start command Entry { x: 9472 } at index 611
-[0] start command of index 612 and term 15
-[0] send entries from 356 to 612 to peer 1
-[0] send entries from 2 to 612 to peer 2
-[0] send entries from 339 to 612 to peer 3
-[0] send entries from 339 to 612 to peer 4
-[0] start command Entry { x: 7686 } at index 612
-[0] start command of index 613 and term 15
-[0] send entries from 356 to 613 to peer 1
-[0] send entries from 2 to 613 to peer 2
-[0] send entries from 339 to 613 to peer 3
-[0] send entries from 339 to 613 to peer 4
-[0] start command Entry { x: 5026 } at index 613
-[0] start command of index 614 and term 15
-[0] send entries from 356 to 614 to peer 1
-[0] send entries from 2 to 614 to peer 2
-[0] send entries from 339 to 614 to peer 3
-[0] send entries from 339 to 614 to peer 4
-[0] start command Entry { x: 1507 } at index 614
-[0] start command of index 615 and term 15
-[0] send entries from 356 to 615 to peer 1
-[0] send entries from 2 to 615 to peer 2
-[0] send entries from 339 to 615 to peer 3
-[0] send entries from 339 to 615 to peer 4
-[0] start command Entry { x: 174 } at index 615
-[0] start command of index 616 and term 15
-[0] send entries from 356 to 616 to peer 1
-[0] send entries from 2 to 616 to peer 2
-[0] send entries from 339 to 616 to peer 3
-[0] send entries from 339 to 616 to peer 4
-[0] start command Entry { x: 2761 } at index 616
-[0] start command of index 617 and term 15
-[0] send entries from 356 to 617 to peer 1
-[0] send entries from 2 to 617 to peer 2
-[0] send entries from 339 to 617 to peer 3
-[0] send entries from 339 to 617 to peer 4
-[0] start command Entry { x: 361 } at index 617
-[0] start command of index 618 and term 15
-[0] send entries from 356 to 618 to peer 1
-[0] send entries from 2 to 618 to peer 2
-[0] send entries from 339 to 618 to peer 3
-[0] send entries from 339 to 618 to peer 4
-[0] start command Entry { x: 5162 } at index 618
-[0] start command of index 619 and term 15
-[0] send entries from 356 to 619 to peer 1
-[0] send entries from 2 to 619 to peer 2
-[0] send entries from 339 to 619 to peer 3
-[0] send entries from 339 to 619 to peer 4
-[0] start command Entry { x: 4122 } at index 619
-[0] start command of index 620 and term 15
-[0] send entries from 356 to 620 to peer 1
-[0] send entries from 2 to 620 to peer 2
-[0] send entries from 339 to 620 to peer 3
-[0] send entries from 339 to 620 to peer 4
-[0] start command Entry { x: 2565 } at index 620
-[0] start command of index 621 and term 15
-[0] send entries from 356 to 621 to peer 1
-[0] send entries from 2 to 621 to peer 2
-[0] send entries from 339 to 621 to peer 3
-[0] send entries from 339 to 621 to peer 4
-[0] start command Entry { x: 700 } at index 621
-[0] start command of index 622 and term 15
-[0] send entries from 356 to 622 to peer 1
-[0] send entries from 2 to 622 to peer 2
-[0] send entries from 339 to 622 to peer 3
-[0] send entries from 339 to 622 to peer 4
-[0] start command Entry { x: 2577 } at index 622
-[0] start command of index 623 and term 15
-[0] send entries from 356 to 623 to peer 1
-[0] send entries from 2 to 623 to peer 2
-[0] send entries from 339 to 623 to peer 3
-[0] send entries from 339 to 623 to peer 4
-[0] start command Entry { x: 202 } at index 623
-[0] start command of index 624 and term 15
-[0] send entries from 356 to 624 to peer 1
-[0] send entries from 2 to 624 to peer 2
-[0] send entries from 339 to 624 to peer 3
-[0] send entries from 339 to 624 to peer 4
-[0] start command Entry { x: 1360 } at index 624
-[0] start command of index 625 and term 15
-[0] send entries from 356 to 625 to peer 1
-[0] send entries from 2 to 625 to peer 2
-[0] send entries from 339 to 625 to peer 3
-[0] send entries from 339 to 625 to peer 4
-[0] start command Entry { x: 7528 } at index 625
-[0] start command of index 626 and term 15
-[0] send entries from 356 to 626 to peer 1
-[0] send entries from 2 to 626 to peer 2
-[0] send entries from 339 to 626 to peer 3
-[0] send entries from 339 to 626 to peer 4
-[0] start command Entry { x: 9447 } at index 626
-[0] start command of index 627 and term 15
-[0] send entries from 356 to 627 to peer 1
-[0] send entries from 2 to 627 to peer 2
-[0] send entries from 339 to 627 to peer 3
-[0] send entries from 339 to 627 to peer 4
-[0] start command Entry { x: 5624 } at index 627
-[4] randomzied election timeout now: 696
-[4] becomes candidate at term 18
-Voter's log (term 11, index 594) is not update to date than votee's log (term 15, index 355)
-[1] reject vote for 4 at term 17
-[1] becomes follower at term 18 commit index 6
-[2] grant vote for 4 at term 17 candidate[4]'s log (index 594, term 11), follower[2]'s log (index342, term3)
-[2] becomes follower at term 18 commit index 5
-[4] received vote from 2 at term 18, RequestVoteReply { grant: true, id: 2, term: 18, log_term: 3, log_index: 342 }
-[4] compaign result VotePending
-[0] start command of index 628 and term 15
-[0] send entries from 356 to 628 to peer 1
-[0] send entries from 2 to 628 to peer 2
-[0] send entries from 339 to 628 to peer 3
-[0] send entries from 339 to 628 to peer 4
-[0] start command Entry { x: 1205 } at index 628
-[4] received vote from 1 at term 18, RequestVoteReply { grant: false, id: 1, term: 18, log_term: 15, log_index: 355 }
-[4]'s vote is rejected by [1] randomzied election timeout now: 1604
-[4] compaign result VotePending
-[0] start command of index 629 and term 15
-[0] send entries from 356 to 629 to peer 1
-[0] send entries from 2 to 629 to peer 2
-[0] send entries from 339 to 629 to peer 3
-[0] send entries from 339 to 629 to peer 4
-[0] start command Entry { x: 4330 } at index 629
-[0] start command of index 630 and term 15
-[0] send entries from 356 to 630 to peer 1
-[0] send entries from 2 to 630 to peer 2
-[0] send entries from 339 to 630 to peer 3
-[0] send entries from 339 to 630 to peer 4
-[0] start command Entry { x: 4609 } at index 630
-[0] start command of index 631 and term 15
-[0] send entries from 356 to 631 to peer 1
-[0] send entries from 2 to 631 to peer 2
-[0] send entries from 339 to 631 to peer 3
-[0] send entries from 339 to 631 to peer 4
-[0] start command Entry { x: 1014 } at index 631
-[0] start command of index 632 and term 15
-[0] send entries from 356 to 632 to peer 1
-[0] send entries from 2 to 632 to peer 2
-[0] send entries from 339 to 632 to peer 3
-[0] send entries from 339 to 632 to peer 4
-[0] start command Entry { x: 4047 } at index 632
-[0] start command of index 633 and term 15
-[0] send entries from 356 to 633 to peer 1
-[0] send entries from 2 to 633 to peer 2
-[0] send entries from 339 to 633 to peer 3
-[0] send entries from 339 to 633 to peer 4
-[0] start command Entry { x: 5201 } at index 633
-[0] start command of index 634 and term 15
-[0] send entries from 356 to 634 to peer 1
-[0] send entries from 2 to 634 to peer 2
-[0] send entries from 339 to 634 to peer 3
-[0] send entries from 339 to 634 to peer 4
-[0] start command Entry { x: 5198 } at index 634
-[0] start command of index 635 and term 15
-[0] send entries from 356 to 635 to peer 1
-[0] send entries from 2 to 635 to peer 2
-[0] send entries from 339 to 635 to peer 3
-[0] send entries from 339 to 635 to peer 4
-[0] start command Entry { x: 3795 } at index 635
+ --- Apply Entry { x: 4920611510952197857 } index 138
+ --- Apply Entry { x: 15340343053980740686 } index 139
+[2] snapshot, index 139
+ --- Apply Entry { x: 5887882986196204681 } index 140
+ --- Apply Entry { x: 13560466300827618497 } index 141
+ --- Apply Entry { x: 6954860024439275618 } index 142
+ --- Apply Entry { x: 2043505443355572867 } index 143
+ --- Apply Entry { x: 8671663111323461024 } index 144
+disconnect(0)
 connect(0)
-connect(3)
-Initial start command Entry { x: 8744 }
-[0] start command of index 636 and term 15
-[0] send entries from 356 to 636 to peer 1
-[0] send entries from 2 to 636 to peer 2
-[0] send entries from 339 to 636 to peer 3
-[0] send entries from 339 to 636 to peer 4
-[0] start command Entry { x: 8744 } at index 636
-[1] receive entries(356 - 636) from [0] with term 15 and commit index 6
-[4] receive entries(339 - 636) from [0] with term 15 and commit index 6
-[0] received append resp AppendEntryReply { id: 4, success: false, term: 18, index: 0, log_term: 0 }
-[2] receive entries(2 - 636) from [0] with term 15 and commit index 6
-[0] becomes follower at term 18 commit index 6
-[4] becomes follower at term 18 commit index 333
-[4] compaign fails due to timeout
-[0] received append resp AppendEntryReply { id: 2, success: false, term: 18, index: 0, log_term: 0 }
-[0] received append resp AppendEntryReply { id: 1, success: false, term: 18, index: 0, log_term: 0 }
-[3] randomzied election timeout now: 827
-[3] becomes candidate at term 19
-[2] grant vote for 3 at term 18 candidate[3]'s log (index 320, term 10), follower[2]'s log (index342, term3)
-[2] becomes follower at term 19 commit index 5
-Voter's log (term 10, index 320) is not update to date than votee's log (term 15, index 636)
-[0] reject vote for 3 at term 18
-Voter's log (term 10, index 320) is not update to date than votee's log (term 11, index 594)
-[4] reject vote for 3 at term 18
-[0] becomes follower at term 19 commit index 6
-Voter's log (term 10, index 320) is not update to date than votee's log (term 15, index 355)
-[1] reject vote for 3 at term 18
-[4] becomes follower at term 19 commit index 333
-[1] becomes follower at term 19 commit index 6
-[3] received vote from 1 at term 19, RequestVoteReply { grant: false, id: 1, term: 19, log_term: 15, log_index: 355 }
-[3]'s vote is rejected by [1] randomzied election timeout now: 1271
-[3] compaign result VotePending
-[3] received vote from 4 at term 19, RequestVoteReply { grant: false, id: 4, term: 19, log_term: 11, log_index: 594 }
-[3]'s vote is rejected by [4] randomzied election timeout now: 1948
-[3] compaign result VotePending
-[3] received vote from 0 at term 19, RequestVoteReply { grant: false, id: 0, term: 19, log_term: 15, log_index: 636 }
-[3]'s vote is rejected by [0] randomzied election timeout now: 2624
-[3] becomes follower at term 19 commit index 5
-[3] compaign fails due to rejection, the randomized_election_timeout now is: 2624
-[0] randomzied election timeout now: 91
-[0] becomes candidate at term 20
-[3] grant vote for 0 at term 19 candidate[0]'s log (index 636, term 15), follower[3]'s log (index320, term10)
-[4] grant vote for 0 at term 19 candidate[0]'s log (index 636, term 15), follower[4]'s log (index594, term11)
-[3] becomes follower at term 20 commit index 5
-[4] becomes follower at term 20 commit index 333
-[2] grant vote for 0 at term 19 candidate[0]'s log (index 636, term 15), follower[2]'s log (index342, term3)
-[2] becomes follower at term 20 commit index 5
-[0] becomes follower at term 20 commit index 6
-[0] compaign fails due to timeout
-[0] randomzied election timeout now: 152
-[0] becomes candidate at term 21
-[3] grant vote for 0 at term 20 candidate[0]'s log (index 636, term 15), follower[3]'s log (index320, term10)
-[3] becomes follower at term 21 commit index 5
-[1] grant vote for 0 at term 19 candidate[0]'s log (index 636, term 15), follower[1]'s log (index355, term15)
-[4] grant vote for 0 at term 20 candidate[0]'s log (index 636, term 15), follower[4]'s log (index594, term11)
-[1] becomes follower at term 21 commit index 6
-[4] becomes follower at term 21 commit index 333
-[2] grant vote for 0 at term 20 candidate[0]'s log (index 636, term 15), follower[2]'s log (index342, term3)
-[2] becomes follower at term 21 commit index 5
-[0] becomes follower at term 21 commit index 6
-[0] compaign fails due to timeout
-[0] randomzied election timeout now: 278
-[0] becomes candidate at term 22
-[2] grant vote for 0 at term 21 candidate[0]'s log (index 636, term 15), follower[2]'s log (index342, term3)
-[3] grant vote for 0 at term 21 candidate[0]'s log (index 636, term 15), follower[3]'s log (index320, term10)
-[3] becomes follower at term 22 commit index 5
-[2] becomes follower at term 22 commit index 5
-[0] received vote from 3 at term 22, RequestVoteReply { grant: true, id: 3, term: 22, log_term: 10, log_index: 320 }
-[0] compaign result VotePending
-[4] grant vote for 0 at term 21 candidate[0]'s log (index 636, term 15), follower[4]'s log (index594, term11)
-[4] becomes follower at term 22 commit index 333
-[1] grant vote for 0 at term 21 candidate[0]'s log (index 636, term 15), follower[1]'s log (index355, term15)
-[1] becomes follower at term 22 commit index 6
-[0] becomes follower at term 22 commit index 6
-[0] compaign fails due to timeout
-[0] randomzied election timeout now: 840
-[0] becomes candidate at term 23
-[1] grant vote for 0 at term 22 candidate[0]'s log (index 636, term 15), follower[1]'s log (index355, term15)
-[1] becomes follower at term 23 commit index 6
-[3] grant vote for 0 at term 22 candidate[0]'s log (index 636, term 15), follower[3]'s log (index320, term10)
-[3] becomes follower at term 23 commit index 5
-[0] received vote from 3 at term 23, RequestVoteReply { grant: true, id: 3, term: 23, log_term: 10, log_index: 320 }
-[0] compaign result VotePending
-[0] becomes follower at term 23 commit index 6
-[0] compaign fails due to timeout
-thread 'raft::tests::test_figure_8_unreliable_2c' panicked at 'one(Entry { x: 8744 }) failed to reach agreement', raft\src\raft\config.rs:332:9
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Initial start command Entry { x: 3349980577132237633 }
+[1] start command of index 145 and term 8
+[1] send snapshot to [0]
+[1] send entries from 145 to 145 to peer 2
+[1] start command Entry { x: 3349980577132237633 } at index 145
+[0] install snapshot prev index 139 prev term 8
+[0] becomes follower at term 5 commit index 130
+[2] receive entries(145 - 145) from [1] with term 8 and commit index 144
+[2] conflict_index 145 self.commit_index 144
+[2] success append entry from 145 to 145
+[1] send heartbeat to [0], term 8, commit index 139 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 144 follower state NormalState
+[1] received append resp AppendEntryReply { id: 2, success: true, term: 8, index: 145, log_term: 0 }
+[1] update commit index to 145
+ --- Apply Entry { x: 3349980577132237633 } index 145
+[2] becomes follower at term 8 commit index 144
+[0] becomes follower at term 8 commit index 139
+[1] send heartbeat to [0], term 8, commit index 139 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[2] becomes follower at term 8 commit index 144
+[2] update commit index to 145
+[0] becomes follower at term 8 commit index 139
+ --- Apply Entry { x: 3349980577132237633 } index 145
+[1] send heartbeat to [0], term 8, commit index 139 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 139
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 139 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 139
+[1] send entries from 140 to 145 to peer 0
+[0] receive entries(140 - 145) from [1] with term 8 and commit index 145
+[0] conflict_index 140 self.commit_index 139
+[0] success append entry from 140 to 145
+[0] update commit index to 145
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 145, log_term: 0 }
+ --- Apply Entry { x: 5887882986196204681 } index 140
+ --- Apply Entry { x: 13560466300827618497 } index 141
+ --- Apply Entry { x: 6954860024439275618 } index 142
+ --- Apply Entry { x: 2043505443355572867 } index 143
+ --- Apply Entry { x: 8671663111323461024 } index 144
+ --- Apply Entry { x: 3349980577132237633 } index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[2] becomes follower at term 8 commit index 145
+[0] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[2] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+disconnect(2)
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+Initial start command Entry { x: 374912250373781401 }
+[1] start command of index 146 and term 8
+[1] send entries from 146 to 146 to peer 0
+[1] send entries from 146 to 146 to peer 2
+[1] start command Entry { x: 374912250373781401 } at index 146
+[0] receive entries(146 - 146) from [1] with term 8 and commit index 145
+[0] conflict_index 146 self.commit_index 145
+[0] success append entry from 146 to 146
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[1] send heartbeat to [0], term 8, commit index 145 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[1] send entries from 146 to 146 to peer 0
+[0] receive entries(146 - 146) from [1] with term 8 and commit index 145
+[0] conflict_index 0 self.commit_index 145
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 146, log_term: 0 }
+[1] update commit index to 146
+ --- Apply Entry { x: 374912250373781401 } index 146
+[1] send heartbeat to [0], term 8, commit index 146 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 145
+[0] update commit index to 146
+ --- Apply Entry { x: 374912250373781401 } index 146
+[1] start command of index 147 and term 8
+[1] send entries from 147 to 147 to peer 0
+[1] send entries from 146 to 147 to peer 2
+[1] start command Entry { x: 11838350163816898955 } at index 147
+[1] start command of index 148 and term 8
+[1] send entries from 147 to 148 to peer 0
+[1] send entries from 146 to 148 to peer 2
+[1] start command Entry { x: 17221292315028008095 } at index 148
+[1] start command of index 149 and term 8
+[1] send entries from 147 to 149 to peer 0
+[1] send entries from 146 to 149 to peer 2
+[1] start command Entry { x: 16025120736477307497 } at index 149
+[1] start command of index 150 and term 8
+[1] send entries from 147 to 150 to peer 0
+[1] send entries from 146 to 150 to peer 2
+[1] start command Entry { x: 15635177868124377707 } at index 150
+[1] start command of index 151 and term 8
+[1] send entries from 147 to 151 to peer 0
+[1] send entries from 146 to 151 to peer 2
+[1] start command Entry { x: 15229065849971455533 } at index 151
+[1] start command of index 152 and term 8
+[1] send entries from 147 to 152 to peer 0
+[1] send entries from 146 to 152 to peer 2
+[1] start command Entry { x: 6347047649517053053 } at index 152
+[1] start command of index 153 and term 8
+[1] send entries from 147 to 153 to peer 0
+[1] send entries from 146 to 153 to peer 2
+[1] start command Entry { x: 11101727789859321585 } at index 153
+[1] start command of index 154 and term 8
+[1] send entries from 147 to 154 to peer 0
+[1] send entries from 146 to 154 to peer 2
+[1] start command Entry { x: 7181465684172251488 } at index 154
+[1] start command of index 155 and term 8
+[1] send entries from 147 to 155 to peer 0
+[1] send entries from 146 to 155 to peer 2
+[1] start command Entry { x: 16344620267642909402 } at index 155
+[1] start command of index 156 and term 8
+[1] send entries from 147 to 156 to peer 0
+[1] send entries from 146 to 156 to peer 2
+[1] start command Entry { x: 4093067878042656049 } at index 156
+[1] start command of index 157 and term 8
+[1] send entries from 147 to 157 to peer 0
+[1] send entries from 146 to 157 to peer 2
+[1] start command Entry { x: 7850169709007581090 } at index 157
+Initial start command Entry { x: 4765260537669087494 }
+[1] start command of index 158 and term 8
+[1] send entries from 147 to 158 to peer 0
+[1] send entries from 146 to 158 to peer 2
+[1] start command Entry { x: 4765260537669087494 } at index 158
+[0] receive entries(147 - 152) from [1] with term 8 and commit index 146
+[0] conflict_index 147 self.commit_index 146
+[0] success append entry from 147 to 152
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 152, log_term: 0 }
+[1] update commit index to 152
+ --- Apply Entry { x: 11838350163816898955 } index 147
+ --- Apply Entry { x: 17221292315028008095 } index 148
+ --- Apply Entry { x: 16025120736477307497 } index 149
+[1] snapshot, index 149
+ --- Apply Entry { x: 15635177868124377707 } index 150
+ --- Apply Entry { x: 15229065849971455533 } index 151
+ --- Apply Entry { x: 6347047649517053053 } index 152
+[1] send heartbeat to [0], term 8, commit index 152 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] receive entries(147 - 155) from [1] with term 8 and commit index 146
+[0] conflict_index 153 self.commit_index 146
+[0] success append entry from 153 to 155
+[0] receive entries(147 - 158) from [1] with term 8 and commit index 146
+[0] conflict_index 156 self.commit_index 146
+[0] success append entry from 156 to 158
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 155, log_term: 0 }
+[0] receive entries(147 - 154) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] update commit index to 155
+[0] receive entries(147 - 147) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 158, log_term: 0 }
+[0] receive entries(147 - 148) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] update commit index to 158
+[0] receive entries(147 - 149) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 154, log_term: 0 }
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 147, log_term: 0 }
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 148, log_term: 0 }
+ --- Apply Entry { x: 11101727789859321585 } index 153
+ --- Apply Entry { x: 7181465684172251488 } index 154
+ --- Apply Entry { x: 16344620267642909402 } index 155
+ --- Apply Entry { x: 4093067878042656049 } index 156
+ --- Apply Entry { x: 7850169709007581090 } index 157
+ --- Apply Entry { x: 4765260537669087494 } index 158
+[0] receive entries(147 - 151) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[0] receive entries(147 - 157) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 151, log_term: 0 }
+[0] receive entries(147 - 150) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 157, log_term: 0 }
+[0] receive entries(147 - 156) from [1] with term 8 and commit index 146
+[0] conflict_index 0 self.commit_index 146
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 150, log_term: 0 }
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 156, log_term: 0 }
+[0] becomes follower at term 8 commit index 146
+[0] update commit index to 152
+ --- Apply Entry { x: 11838350163816898955 } index 147
+ --- Apply Entry { x: 17221292315028008095 } index 148
+ --- Apply Entry { x: 16025120736477307497 } index 149
+[0] snapshot, index 149
+ --- Apply Entry { x: 15635177868124377707 } index 150
+ --- Apply Entry { x: 15229065849971455533 } index 151
+ --- Apply Entry { x: 6347047649517053053 } index 152
+[1] send heartbeat to [0], term 8, commit index 158 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state NormalState
+[0] becomes follower at term 8 commit index 152
+[0] update commit index to 158
+ --- Apply Entry { x: 11101727789859321585 } index 153
+ --- Apply Entry { x: 7181465684172251488 } index 154
+ --- Apply Entry { x: 16344620267642909402 } index 155
+ --- Apply Entry { x: 4093067878042656049 } index 156
+ --- Apply Entry { x: 7850169709007581090 } index 157
+ --- Apply Entry { x: 4765260537669087494 } index 158
+disconnect(2)
 
 
-failures:
-    raft::tests::test_figure_8_unreliable_2c
+
+
+问题：Apply out of order
+
+server 2正要apply 145
+这个时候来了install snapshot，snapshot 会清空 config 那边的log 包括144及以前
+而config  收到 145的时候 就意味着 out of order了
+
+
+
+connect(2)
+Initial start command Entry { x: 2018015632309958089 }
+[1] start command of index 159 and term 8
+[1] send entries from 159 to 159 to peer 0
+[1] send snapshot to [2]
+[1] start command Entry { x: 2018015632309958089 } at index 159
+[1] send heartbeat to [0], term 8, commit index 158 follower state NormalState
+[1] send heartbeat to [2], term 8, commit index 145 follower state SnapshotState
+[0] receive entries(159 - 159) from [1] with term 8 and commit index 158
+[0] conflict_index 159 self.commit_index 158
+[0] success append entry from 159 to 159
+[1] received append resp AppendEntryReply { id: 0, success: true, term: 8, index: 159, log_term: 0 }
+[1] update commit index to 159
+ --- Apply Entry { x: 2018015632309958089 } index 159
+[1] snapshot, index 159
+[2] becomes follower at term 8 commit index 144
+[2] update commit index to 145
+[2] install snapshot prev index 149 prev term 8
+[2] becomes follower at term 8 commit index 145
+ --- Apply Entry { x: 3349980577132237633 } index 145
+thread '<unnamed>' panicked at 'server 2 apply out of order 145', raft\src\raft\config.rs:430:21
+stack backtrace:
+[0] becomes follower at term 8 commit index 158
+   0: std::panicking::begin_panic_handler
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rs:515
+   1: std::panicking::begin_panic_fmt
+             at /rustc/c8dfcfe046a7680554bf4eb612bad840e7631c4b\/library\std\src\panicking.rs:457
+   2: raft::raft::config::impl$1::start1_ext::closure$0
+             at .\src\raft\config.rs:430

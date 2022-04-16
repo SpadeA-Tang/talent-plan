@@ -1,5 +1,7 @@
 use super::raft::Entry;
+use crate::proto::raftpb;
 
+#[derive(Clone)]
 pub struct RaftLog {
     pub commit_idx: u64,
     pub apply_idx: u64,
@@ -9,6 +11,32 @@ pub struct RaftLog {
     pub prev_last_log_index: u64,
     pub last_index_in_snapshot: u64,
     pub last_term_in_snapshot: u64,
+}
+
+impl From<RaftLog> for raftpb::RaftLog {
+    fn from(raft_log: RaftLog) -> Self {
+        raftpb::RaftLog {
+            commit_idx: raft_log.commit_idx,
+            apply_idx: raft_log.apply_idx,
+            entries: raft_log.entries,
+            prev_last_log_index: raft_log.prev_last_log_index,
+            last_index_in_snapshot: raft_log.last_index_in_snapshot,
+            last_term_in_snapshot: raft_log.last_term_in_snapshot,
+        }
+    }
+}
+
+impl From<raftpb::RaftLog> for RaftLog {
+    fn from(raft_log: raftpb::RaftLog) -> Self {
+        RaftLog {
+            commit_idx: raft_log.commit_idx,
+            apply_idx: raft_log.apply_idx,
+            entries: raft_log.entries,
+            prev_last_log_index: raft_log.prev_last_log_index,
+            last_index_in_snapshot: raft_log.last_index_in_snapshot,
+            last_term_in_snapshot: raft_log.last_term_in_snapshot,
+        }
+    }
 }
 
 impl RaftLog {
@@ -86,6 +114,9 @@ impl RaftLog {
         let real_index = log_index - self.last_index_in_snapshot;
         if real_index as usize >= self.entries.len() {
             println!("Realindex {} len {}", real_index, self.entries.len());
+        }
+        if real_index >= self.entries.len() as u64 {
+            println!("Something wrong");
         }
         assert!(real_index < self.entries.len() as u64);
         real_index

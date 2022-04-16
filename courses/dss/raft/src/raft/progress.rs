@@ -8,10 +8,11 @@ pub struct ProgressTracker {
 pub struct Progress {
     pub next_index: u64,
     pub matched_index: u64,
-    pub state: PrState
+    pub state: PrState,
+    pub snap_timeout: u64,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum PrState {
     NormalState,
     SnapshotState,
@@ -29,6 +30,7 @@ impl Progress {
         Progress {
             next_index: 0,
             matched_index: 0,
+            snap_timeout: 0,
             state: PrState::NormalState,
         }
     }

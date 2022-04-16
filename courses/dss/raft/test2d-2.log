@@ -1,0 +1,153 @@
+ --- Apply Entry { x: 4345906655162117850 } index 211
+[0] start command of index 212 and term 11
+[0] send entries from 211 to 212 to peer 1
+[0] send entries from 212 to 212 to peer 2
+[0] start command Entry { x: 8313335352311395802 } at index 212
+[0] start command of index 213 and term 11
+[0] send entries from 211 to 213 to peer 1
+[0] send entries from 212 to 213 to peer 2
+[0] start command Entry { x: 2270040262981966210 } at index 213
+[0] start command of index 214 and term 11
+[0] send entries from 211 to 214 to peer 1
+[0] send entries from 212 to 214 to peer 2
+[0] start command Entry { x: 13710196708950455872 } at index 214
+[0] start command of index 215 and term 11
+[0] send entries from 211 to 215 to peer 1
+[0] send entries from 212 to 215 to peer 2
+[0] start command Entry { x: 12829045081210692149 } at index 215
+[0] start command of index 216 and term 11
+[0] send entries from 211 to 216 to peer 1
+[0] send entries from 212 to 216 to peer 2
+[0] start command Entry { x: 14699184299930433525 } at index 216
+[0] start command of index 217 and term 11
+[0] send entries from 211 to 217 to peer 1
+[0] send entries from 212 to 217 to peer 2
+[0] start command Entry { x: 7911818306497776923 } at index 217
+[0] start command of index 218 and term 11
+[0] send entries from 211 to 218 to peer 1
+[0] send entries from 212 to 218 to peer 2
+[0] start command Entry { x: 17589713012453465309 } at index 218
+[0] start command of index 219 and term 11
+[0] send entries from 211 to 219 to peer 1
+[0] send entries from 212 to 219 to peer 2
+[0] start command Entry { x: 12168612775157963119 } at index 219
+[0] start command of index 220 and term 11
+[0] send entries from 211 to 220 to peer 1
+[0] send entries from 212 to 220 to peer 2
+[0] start command Entry { x: 4295364498562546908 } at index 220
+[0] start command of index 221 and term 11
+[0] send entries from 211 to 221 to peer 1
+[0] send entries from 212 to 221 to peer 2
+[0] start command Entry { x: 6732669743976839769 } at index 221
+[0] start command of index 222 and term 11
+[0] send entries from 211 to 222 to peer 1
+[0] send entries from 212 to 222 to peer 2
+[0] start command Entry { x: 6880604653072829480 } at index 222
+Initial start command Entry { x: 4185606901619501248 }
+[0] start command of index 223 and term 11
+[0] send entries from 211 to 223 to peer 1
+[0] send entries from 212 to 223 to peer 2
+[0] start command Entry { x: 4185606901619501248 } at index 223
+[0] send heartbeat to [1], term 11, commit index 210 follower state NormalState
+[2] receive entries(212 - 215) from [0] with term 11 and commit index 211
+[0] send heartbeat to [2], term 11, commit index 211 follower state NormalState
+[2] conflict_index 212 self.commit_index 211
+[2] success append entry from 212 to 215
+[2] receive entries(212 - 221) from [0] with term 11 and commit index 211
+[2] conflict_index 216 self.commit_index 211
+[2] success append entry from 216 to 221
+[2] receive entries(212 - 217) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+[2] receive entries(212 - 212) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+[2] receive entries(212 - 218) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 215, log_term: 0 }
+[0] update commit index to 215
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 221, log_term: 0 }
+[2] receive entries(212 - 216) from [0] with term 11 and commit index 211
+[0] update commit index to 221
+[2] conflict_index 0 self.commit_index 211
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 212, log_term: 0 }
+[2] receive entries(212 - 223) from [0] with term 11 and commit index 211
+[2] conflict_index 222 self.commit_index 211
+[2] success append entry from 222 to 223
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 218, log_term: 0 }
+[2] receive entries(212 - 222) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+ --- Apply Entry { x: 8313335352311395802 } index 212
+[2] receive entries(212 - 219) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+ --- Apply Entry { x: 2270040262981966210 } index 213
+ --- Apply Entry { x: 13710196708950455872 } index 214
+ --- Apply Entry { x: 12829045081210692149 } index 215
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 216, log_term: 0 }
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 223, log_term: 0 }
+ --- Apply Entry { x: 14699184299930433525 } index 216
+[0] update commit index to 223
+ --- Apply Entry { x: 7911818306497776923 } index 217
+ --- Apply Entry { x: 17589713012453465309 } index 218
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 222, log_term: 0 }
+ --- Apply Entry { x: 12168612775157963119 } index 219
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 219, log_term: 0 }
+[0] snapshot, index 219
+ --- Apply Entry { x: 4295364498562546908 } index 220
+ --- Apply Entry { x: 6732669743976839769 } index 221
+ --- Apply Entry { x: 6880604653072829480 } index 222
+ --- Apply Entry { x: 4185606901619501248 } index 223
+[2] receive entries(212 - 213) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+[2] receive entries(212 - 214) from [0] with term 11 and commit index 211
+[2] conflict_index 0 self.commit_index 211
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 213, log_term: 0 }
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 214, log_term: 0 }
+[2] becomes follower at term 11 commit index 211
+[0] send heartbeat to [1], term 11, commit index 210 follower state NormalState
+[0] send heartbeat to [2], term 11, commit index 223 follower state NormalState
+[2] becomes follower at term 11 commit index 211
+[2] update commit index to 223
+ --- Apply Entry { x: 8313335352311395802 } index 212
+ --- Apply Entry { x: 2270040262981966210 } index 213
+ --- Apply Entry { x: 13710196708950455872 } index 214
+ --- Apply Entry { x: 12829045081210692149 } index 215
+ --- Apply Entry { x: 14699184299930433525 } index 216
+ --- Apply Entry { x: 7911818306497776923 } index 217
+ --- Apply Entry { x: 17589713012453465309 } index 218
+ --- Apply Entry { x: 12168612775157963119 } index 219
+[2] snapshot, index 219
+ --- Apply Entry { x: 4295364498562546908 } index 220
+ --- Apply Entry { x: 6732669743976839769 } index 221
+ --- Apply Entry { x: 6880604653072829480 } index 222
+ --- Apply Entry { x: 4185606901619501248 } index 223
+disconnect(1)
+connect(1)
+Initial start command Entry { x: 14700870583336457081 }
+[0] start command of index 224 and term 11
+[0] send snapshot to [1]
+[0] send entries from 224 to 224 to peer 2
+[0] start command Entry { x: 14700870583336457081 } at index 224
+[0] send heartbeat to [1], term 11, commit index 210 follower state SnapshotState
+[0] send heartbeat to [2], term 11, commit index 223 follower state NormalState
+[2] receive entries(224 - 224) from [0] with term 11 and commit index 223
+[2] conflict_index 224 self.commit_index 223
+[2] success append entry from 224 to 224
+[0] received append resp AppendEntryReply { id: 2, success: true, term: 11, index: 224, log_term: 0 }
+[0] update commit index to 224
+ --- Apply Entry { x: 14700870583336457081 } index 224
+[1] becomes follower at term 11 commit index 209
+[1] update commit index to 210
+[1] install snapshot prev index 219 prev term 11
+[1] becomes follower at term 11 commit index 210
+ --- Apply Entry { x: 6047430718391189593 } index 210
+thread '<unnamed>' panicked at 'server 1 apply out of order 210', raft\src\raft\config.rs:430:21
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[2] becomes follower at term 11 commit index 223
+thread 'raft::tests::test_snapshot_install_unreliable_crash_2d' panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', raft\src\raft\config.rs:237:37
+
+
+failures:
+    raft::tests::test_snapshot_install_unreliable_crash_2d
+
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 40 filtered out; finished in 91.95s
+
+error: test failed, to rerun pass '-p raft --lib'

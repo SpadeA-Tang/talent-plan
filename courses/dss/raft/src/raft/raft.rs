@@ -8,12 +8,12 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use super::errors::*;
+use super::{errors::*, raftlog};
 use super::persister::*;
 use super::progress::*;
 
-const ELECTION_TIMEOUT: u64 = 50;
-const HEARTBEAT_TIMEOUT: u64 = 40;
+const ELECTION_TIMEOUT: u64 = 150;
+const HEARTBEAT_TIMEOUT: u64 = 20;
 const SLEEP_DURATION: u64 = 5;
 
 const PRINT_ELECTION: bool = true;
@@ -61,8 +61,6 @@ pub enum RaftState {
     Leader,
 }
 
-use super::raftlog::*;
-
 pub struct Router<T> {
     pub tx: UnboundedSender<T>,
     pub rx: Option<UnboundedReceiver<T>>,
@@ -104,12 +102,13 @@ pub struct Raft {
 
     prs: ProgressTracker,
 
-    raft_log: RaftLog,
+    raft_log: raftlog::RaftLog,
     pub append_entries_router: Router<Reply>,
     // msgs: Vec<Msg>,
     apply_ch: UnboundedSender<ApplyMsg>,
     pub apply_flag_router: ApplyFlagRouter,
 
+    applying: bool,
     shutdown: bool,
 }
 
@@ -134,6 +133,7 @@ impl ApplyFlagRouter {
 
 pub enum ApplyFlag {
     Apply,
+    Snapshot(ApplyMsg),
     Shutdown,
 }
 
@@ -178,13 +178,14 @@ impl Raft {
 
             prs,
 
-            raft_log: RaftLog::new(0, 0),
+            raft_log: raftlog::RaftLog::new(0, 0),
             // vote_router: Router::new(),
             append_entries_router: Router::new(),
 
             apply_ch,
             apply_flag_router: ApplyFlagRouter::new(),
 
+            applying: false,
             shutdown: false,
         };
 
@@ -243,6 +244,12 @@ impl Raft {
 
         if self.state != RaftState::Follower {
             self.become_follower(arg.term, Some(arg.id as usize));
+        }
+
+        if arg.entries[arg.entries.len() - 1].index < self.raft_log.commit_idx {
+            reply.success = true;
+            reply.index = self.raft_log.commit_idx;
+            return reply;
         }
 
         // 2. Check whether there is a entry matching the leader's prev log entry
@@ -360,7 +367,7 @@ impl Raft {
             return;
         }
 
-        if self.heartbeat_round > 10 {
+        if self.heartbeat_round > 5 {
             self.heartbeat_round = 0;
             let pr = self.prs.progress_map.get(&(resp.id as usize)).unwrap();
             if pr.matched_index < self.raft_log.last_index() {
@@ -392,12 +399,6 @@ impl Raft {
     // todo : handle commit index
     pub fn handle_heartbeat(&mut self, arg: HeartbeatArgs) -> HeartbeatReply {
         if arg.term >= self.term {
-            if PRINT_APPEND {
-                println!(
-                    "[{}] received heartbeat from [{}], term {}, commit index {}",
-                    self.me, arg.id, arg.term, arg.commit_index
-                );
-            }
             self.become_follower(arg.term, Some(arg.id as usize));
             if self.raft_log.commit(arg.commit_index) {
                 if PRINT_APPEND {
@@ -431,10 +432,21 @@ impl Raft {
             let peer = &self.peers[id];
             let peer_clone = peer.clone();
             let mut arg_clone = arg.clone();
-            let pr = self.prs.progress_map.get(&id).unwrap();
+            let mut pr = self.prs.progress_map.get_mut(&id).unwrap();
             arg_clone.commit_index = std::cmp::min(arg_clone.commit_index, pr.matched_index);
             let mut tx = self.append_entries_router.tx.clone();
+
+            let follower_state = pr.state.clone();
+            if follower_state == PrState::SnapshotState {
+                pr.snap_timeout += 1;
+            }
             peer.spawn(async move {
+                if PRINT_APPEND {
+                    println!(
+                        "[{}] send heartbeat to [{}], term {}, commit index {} follower state {:?}",
+                        arg_clone.id, id, arg_clone.term, arg_clone.commit_index, follower_state,
+                    );
+                }
                 // todo: now, we don't need the result of hb
                 let resp = peer_clone.heartbeat(&arg_clone).await.map_err(Error::Rpc);
                 if let Ok(resp) = resp {
@@ -476,10 +488,9 @@ impl Raft {
         //     data: Vec::new(),
         // });
         // last_index += 1;
-        
-        let index = self.raft_log.last_index_in_snapshot;
+
         self.prs.reset_progress(|id: usize, pr: &mut Progress| {
-            pr.matched_index = index;
+            pr.matched_index = 0;
             pr.next_index = last_index + 1;
             if id == me {
                 pr.matched_index = last_index;
@@ -630,12 +641,15 @@ impl Raft {
         let raft_state = RaftDurableState {
             term: self.term,
             vote: vote as u64,
-            entries: self.raft_log.entries.clone(),
+            raft_log: Some(self.raft_log.clone().into()),
         };
 
         let mut buf = vec![];
         labcodec::encode(&raft_state, &mut buf).expect("Persist error!!!");
         self.persister.save_raft_state(buf);
+        if self.raft_log.last_index_in_snapshot != self.raft_log.entries[0].index {
+            assert!(self.raft_log.last_index_in_snapshot == self.raft_log.entries[0].index);
+        }
     }
 
     /// restore previously persisted state.
@@ -653,7 +667,10 @@ impl Raft {
             self.vote = Some(raft_state.vote as usize);
         }
         self.term = raft_state.term;
-        self.raft_log.entries = raft_state.entries;
+        self.raft_log = raft_state.raft_log.unwrap().into();
+        if self.raft_log.last_index_in_snapshot != self.raft_log.entries[0].index {
+            assert!(self.raft_log.last_index_in_snapshot == self.raft_log.entries[0].index);
+        }
     }
 
     /// example code to send a RequestVote RPC to a server.
@@ -747,7 +764,11 @@ impl Raft {
 
         let mut pr = self.prs.progress_map.get_mut(&to).unwrap();
         if pr.state == PrState::SnapshotState {
-            return;
+            if pr.snap_timeout >= 5 {
+                pr.snap_timeout = 0;
+            } else {
+                return;
+            }
         }
 
         // Check the existance of the log entry
@@ -761,6 +782,7 @@ impl Raft {
                 snapshot,
                 term: self.term,
             };
+            println!("[{}] send snapshot to [{}]", self.me, to);
             pr.state = PrState::SnapshotState;
             peer.spawn(async move {
                 let res = peer_clone.install_snapshot(&arg).await.map_err(Error::Rpc);
@@ -812,14 +834,23 @@ impl Raft {
         snapshot: &[u8],
     ) -> bool {
         // Your code here (2D).
+        println!(
+            "[{}] install snapshot prev index {} prev term {}",
+            self.me, last_included_index, last_included_term
+        );
+        if self.applying {
+            return false;
+        }
         let commit_index = self.raft_log.commit_idx;
         let commit_term = self.raft_log.term(commit_index);
         if last_included_term < commit_term || last_included_index < commit_index {
             return false;
         }
         self.become_follower(self.term, self.leader);
-        self.raft_log = RaftLog::new(last_included_index, last_included_term);
-        
+        self.raft_log = raftlog::RaftLog::new(last_included_index, last_included_term);
+        self.raft_log.apply_idx = last_included_index;
+        self.raft_log.commit_idx = last_included_index;
+
         self.persist();
 
         self.persister
@@ -829,30 +860,42 @@ impl Raft {
     }
 
     pub fn apply_snapshot(&mut self, arg: SnapshotArgs) -> (bool, u64) {
+        if self.applying {
+            return (false, 0);
+        }
         if arg.term < self.term {
             return (false, 0);
         }
         if arg.last_included_index < self.raft_log.commit_idx {
             return (false, 0);
         }
-        let _ =self.apply_ch.send(ApplyMsg::Snapshot {
+        let index = arg.last_included_index;
+
+        let snap = ApplyMsg::Snapshot {
             data: arg.snapshot,
             term: arg.last_included_term,
             index: arg.last_included_index,
-        });
-        (true, arg.last_included_index)
+        };
+
+        if let Err(e) = self.apply_flag_router.send(ApplyFlag::Snapshot(snap)) {
+            println!("Warning: {}", e);
+        }
+
+        (true, index)
     }
 
     pub fn snapshot(&mut self, index: u64, snapshot: &[u8]) {
         // Your code here (2D).
         assert!(index >= self.raft_log.last_index_in_snapshot);
+        println!("[{}] snapshot, index {}", self.me, index);
         let term = self.raft_log.term(index);
         let real_index = self.raft_log.real_index(index);
         let mut remain_entries = self.raft_log.entries.split_off(real_index as usize);
         std::mem::swap(&mut self.raft_log.entries, &mut remain_entries);
-        self.persist();
         self.raft_log.last_index_in_snapshot = index;
         self.raft_log.last_term_in_snapshot = term;
+        assert!(self.raft_log.last_index_in_snapshot == self.raft_log.entries[0].index);
+        self.persist();
         self.persister
             .save_state_and_snapshot(self.persister.raft_state(), snapshot.to_vec());
     }
@@ -862,18 +905,10 @@ impl Raft {
     }
 }
 
-impl Raft {
-    /// Only for suppressing deadcode warnings.
-    #[doc(hidden)]
-    pub fn __suppress_deadcode(&mut self) {
-        let _ = self.cond_install_snapshot(0, 0, &[]);
-    }
-}
-
 pub fn gen_randomized_timeout() -> u64 {
     let mut rng = rand::thread_rng();
     // 增加随机时间的权重，可以减少拥有old log的node一直成为candidate扰乱选举的现象
-    rng.gen_range(0, ELECTION_TIMEOUT * 20)
+    rng.gen_range(ELECTION_TIMEOUT, ELECTION_TIMEOUT * 3)
 }
 
 pub fn background_worker(rf: Arc<Mutex<Raft>>) {
@@ -1004,7 +1039,11 @@ pub fn handle_resp_worker(rf: Arc<Mutex<Raft>>, mut rx: UnboundedReceiver<Reply>
                     Reply::SnapshotReply(res) => {
                         if !res.reject {
                             let mut rf_locked = rf.lock().unwrap();
-                            let mut pr = rf_locked.prs.progress_map.get_mut(&(res.id as usize)).unwrap();
+                            let mut pr = rf_locked
+                                .prs
+                                .progress_map
+                                .get_mut(&(res.id as usize))
+                                .unwrap();
                             pr.state = PrState::NormalState;
                             pr.matched_index = res.last_included_index;
                             pr.next_index = res.last_included_index + 1;
@@ -1021,7 +1060,7 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
     loop {
         match rx.recv().unwrap() {
             ApplyFlag::Apply => {
-                let rf_locked = rf.lock().unwrap();
+                let mut rf_locked = rf.lock().unwrap();
                 let mut apply_msgs = Vec::new();
                 let mut sender = rf_locked.apply_ch.clone();
 
@@ -1034,6 +1073,8 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                     apply_msgs.push(apply_msg);
                 }
                 let commit_idx = rf_locked.raft_log.commit_idx;
+                rf_locked.applying = true;
+                println!("[{}] is applying", rf_locked.me);
                 drop(rf_locked);
 
                 for msg in apply_msgs {
@@ -1042,6 +1083,13 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
 
                 let mut rf_locked = rf.lock().unwrap();
                 rf_locked.raft_log.apply_idx = commit_idx;
+                rf_locked.applying = false;
+                println!("[{}] finishes applying", rf_locked.me);
+            }
+            ApplyFlag::Snapshot(msg) => {
+                let rf_locked = rf.lock().unwrap();
+                let mut sender = rf_locked.apply_ch.clone();
+                let _ = futures::executor::block_on(async { sender.send(msg).await });
             }
             ApplyFlag::Shutdown => {
                 return;

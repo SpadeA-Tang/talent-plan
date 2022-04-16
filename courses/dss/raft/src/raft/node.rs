@@ -204,7 +204,7 @@ impl RaftService for Node {
         let mut rf_locked = self.raft.lock().unwrap();
         let res = rf_locked.apply_snapshot(args);
         Ok(SnapshotReply {
-            reject: res.0,
+            reject: !res.0,
             id: rf_locked.me as u64,
             last_included_index: res.1,
         })
