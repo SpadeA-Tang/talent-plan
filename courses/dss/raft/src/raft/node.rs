@@ -135,6 +135,10 @@ impl Node {
         }
     }
 
+    pub fn get_commit_index(&self) -> u64 {
+        self.raft.lock().unwrap().get_commit_index()
+    }
+
     /// the tester calls kill() when a Raft instance won't be
     /// needed again. you are not required to do anything in
     /// kill(), but it might be convenient to (for example)

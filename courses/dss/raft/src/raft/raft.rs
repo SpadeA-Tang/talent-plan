@@ -33,6 +33,7 @@ pub enum ApplyMsg {
         term: u64,
         index: u64,
     },
+    Shutdown
 }
 
 /// State of a raft peer.
@@ -208,6 +209,10 @@ impl Raft {
         });
 
         self.apply_flag_router.send(ApplyFlag::Shutdown).unwrap();
+    }
+
+    pub fn get_commit_index(&self) -> u64 {
+        self.raft_log.commit_idx
     }
 
     // First, I will implement naive rejection which means when leader discovers that the folower does not have a

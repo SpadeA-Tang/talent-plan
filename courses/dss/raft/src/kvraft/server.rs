@@ -1,8 +1,18 @@
-use futures::channel::mpsc::unbounded;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::thread;
+use std::time::Duration;
+
+use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
+use futures::SinkExt;
+use futures::StreamExt;
+type CallBack<T> = UnboundedSender<T>;
 
 use crate::proto::kvraftpb::*;
-use crate::raft::node;
 use crate::raft;
+use crate::raft::node;
+use crate::raft::raft::ApplyMsg;
 
 pub struct KvServer {
     pub rf: node::Node,
@@ -10,6 +20,18 @@ pub struct KvServer {
     // snapshot if log grows this big
     maxraftstate: Option<usize>,
     // Your definitions here.
+    pub kv_table: HashMap<String, String>,
+
+    call_backs: Vec<ApplyCtx<RequestRes>>,
+
+    apply_ch: Option<UnboundedReceiver<ApplyMsg>>,
+
+    shutdown: bool,
+}
+
+pub struct ApplyCtx<T> {
+    cb: CallBack<T>,
+    index: u64,
 }
 
 impl KvServer {
@@ -24,9 +46,43 @@ impl KvServer {
         let (tx, apply_ch) = unbounded();
         let rf = raft::raft::Raft::new(servers, me, persister, tx);
 
-        crate::your_code_here((rf, maxraftstate, apply_ch))
+        KvServer {
+            rf: node::Node::new(rf),
+            me,
+            maxraftstate,
+            kv_table: HashMap::new(),
+            call_backs: Vec::new(),
+            apply_ch: Some(apply_ch),
+            shutdown: true,
+        }
+    }
+
+    pub fn take_apply_ch(&mut self) -> UnboundedReceiver<ApplyMsg> {
+        if let Some(apply_ch) = self.apply_ch.take() {
+            return apply_ch;
+        }
+
+        unreachable!();
+    }
+
+    pub fn push_apply_ctx(&mut self, apply_ctx: ApplyCtx<RequestRes>) {
+        self.call_backs.push(apply_ctx);
+    }
+
+    pub fn get_cb(&mut self, index: u64) -> CallBack<RequestRes> {
+        for i in 0..self.call_backs.len() {
+            let apply_ctx = &self.call_backs[i];
+            if apply_ctx.index == index {
+                let apply_ctx = self.call_backs.remove(i);
+                return apply_ctx.cb;
+            }
+        }
+
+        panic!("Cannot find cb");
     }
 }
+
+use futures::executor::block_on;
 
 impl KvServer {
     /// Only for suppressing deadcode warnings.
@@ -34,6 +90,68 @@ impl KvServer {
     pub fn __suppress_deadcode(&mut self) {
         let _ = &self.me;
         let _ = &self.maxraftstate;
+    }
+
+    fn apply_worker(server: Arc<Mutex<KvServer>>, mut apply_ch: UnboundedReceiver<ApplyMsg>) {
+        loop {
+            block_on(async {
+                while let Some(apply_msg) = apply_ch.next().await {
+                    let mut server_locked = server.lock().unwrap();
+                    if server_locked.shutdown {
+                        return;
+                    }
+                    if !server_locked.rf.is_leader() {
+                        continue;
+                    }
+                    match apply_msg {
+                        ApplyMsg::Command { data, index } => {
+                            let command: RaftCommand =
+                                labcodec::decode(&data).expect("committed command is not an entry");
+
+                            // Same problem: why op_type is the type of i32
+                            // Get
+                            if command.op_type == 0 {
+                                let request: GetRequest = labcodec::decode(&command.data)
+                                    .expect("committed command is not an entry");
+                                let mut cb = server_locked.get_cb(index);
+                                cb.send(RequestRes::Success(
+                                    server_locked.kv_table.get(&request.key).unwrap().clone(),
+                                ))
+                                .await
+                                .unwrap();
+                            // PutAppend
+                            } else if command.op_type == 1 {
+                                let request: PutAppendRequest = labcodec::decode(&command.data)
+                                    .expect("committed command is not an entry");
+                                let mut cb = server_locked.get_cb(index);
+                                let kv_table = &mut server.lock().unwrap().kv_table;
+                                // Append
+                                if request.op == 1 {
+                                    kv_table.insert(request.key, request.value);
+                                // Put
+                                } else if request.op == 2 {
+                                    let old_value = kv_table
+                                        .get_mut(&request.key)
+                                        .expect("It should have a value");
+                                    old_value.push_str(&request.value);
+                                } else {
+                                    unreachable!();
+                                }
+                                cb.send(RequestRes::Success(String::new())).await.unwrap();
+                            } else {
+                                unreachable!();
+                            }
+                        }
+                        ApplyMsg::Snapshot { .. } => {
+                            unreachable!()
+                        }
+                        ApplyMsg::Shutdown => {
+                            unreachable!()
+                        }
+                    }
+                }
+            })
+        }
     }
 }
 
@@ -54,12 +172,22 @@ impl KvServer {
 #[derive(Clone)]
 pub struct Node {
     // Your definitions here.
+    server: Arc<Mutex<KvServer>>,
 }
 
 impl Node {
     pub fn new(kv: KvServer) -> Node {
         // Your code here.
-        crate::your_code_here(kv);
+        let node = Node {
+            server: Arc::new(Mutex::new(kv)),
+        };
+
+        let server = node.server.clone();
+        let apply_ch = server.lock().unwrap().take_apply_ch();
+
+        KvServer::apply_worker(server, apply_ch);
+
+        node
     }
 
     /// the tester calls kill() when a KVServer instance won't
@@ -87,10 +215,14 @@ impl Node {
 
     pub fn get_state(&self) -> raft::raft::State {
         // Your code here.
-        raft::raft::State {
-            ..Default::default()
-        }
+        self.server.lock().unwrap().rf.get_state()
     }
+}
+
+pub enum RequestRes {
+    Timeout,
+    Success(String),
+    Other,
 }
 
 #[async_trait::async_trait]
@@ -98,12 +230,103 @@ impl KvService for Node {
     // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
     async fn get(&self, arg: GetRequest) -> labrpc::Result<GetReply> {
         // Your code here.
-        crate::your_code_here(arg)
+        if !self.is_leader() {
+            return Ok(GetReply {
+                wrong_leader: true,
+                err: String::new(),
+                value: String::new(),
+            });
+        }
+
+        let mut reply = GetReply::default();
+        reply.wrong_leader = true;
+
+        let (cb, mut rx): (UnboundedSender<RequestRes>, UnboundedReceiver<RequestRes>) =
+            unbounded();
+
+        let mut timeout_cb = cb.clone();
+        // 超时提醒
+        let _ = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(200));
+            let _ =
+                futures::executor::block_on(async { timeout_cb.send(RequestRes::Timeout).await });
+        });
+        let mut server = self.server.lock().unwrap();
+        let mut data = vec![];
+        labcodec::encode(&arg, &mut data).unwrap();
+        let raft_command = RaftCommand { op_type: 0, data };
+
+        if let Ok((index, _)) = server.rf.start(&raft_command) {
+            server.push_apply_ctx(ApplyCtx { cb, index });
+            drop(server);
+            let res = block_on(async { rx.next().await }).unwrap();
+
+            match res {
+                RequestRes::Timeout => {
+                    reply.err = String::from("Timeout");
+                }
+                RequestRes::Success(value) => {
+                    reply.wrong_leader = false;
+                    reply.value = value;
+                }
+                RequestRes::Other => {
+                    unimplemented!();
+                }
+            }
+        }
+
+        Ok(reply)
     }
 
     // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
+    // todo: duplicate detections
     async fn put_append(&self, arg: PutAppendRequest) -> labrpc::Result<PutAppendReply> {
         // Your code here.
-        crate::your_code_here(arg)
+        if !self.is_leader() {
+            return Ok(PutAppendReply {
+                wrong_leader: true,
+                err: String::new(),
+            });
+        }
+
+        let mut reply = PutAppendReply::default();
+        reply.wrong_leader = true;
+
+        let (cb, mut rx): (UnboundedSender<RequestRes>, UnboundedReceiver<RequestRes>) =
+            unbounded();
+        let mut timeout_cb = cb.clone();
+        // 超时提醒
+        let _ = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(200));
+            let _ =
+                futures::executor::block_on(async { timeout_cb.send(RequestRes::Timeout).await });
+        });
+
+        let mut server = self.server.lock().unwrap();
+        let mut data = vec![];
+        labcodec::encode(&arg, &mut data).unwrap();
+        let raft_command = RaftCommand { op_type: 1, data };
+
+        if let Ok((index, _)) = server.rf.start(&raft_command) {
+            server.push_apply_ctx(ApplyCtx { cb, index });
+            drop(server);
+            let res = block_on(async { rx.next().await }).unwrap();
+
+            match res {
+                RequestRes::Timeout => {
+                    reply.wrong_leader = false;
+                    reply.err = String::from("Timeout");
+                }
+                RequestRes::Success(_) => {
+                    reply.wrong_leader = false;
+                    // todo: duplicate detection
+                }
+                RequestRes::Other => {
+                    unimplemented!();
+                }
+            }
+        }
+
+        Ok(reply)
     }
 }

@@ -15,6 +15,8 @@ message PutAppendRequest {
     // "Put" or "Append"
     Op op = 3;
     // You'll have to add definitions here.
+    uint64 client_id = 4;
+    uint64 op_sequence = 5;
 }
 
 message PutAppendReply {
@@ -31,4 +33,15 @@ message GetReply {
     bool wrong_leader = 1;
     string err = 2;
     string value = 3;
+}
+
+enum Type {
+    Get = 0;
+    PutAppend = 1;
+}
+
+message RaftCommand {
+    Type op_type = 1;
+    // encoded data of GetRequest or PutAppendRequest
+    bytes data = 2;
 }
