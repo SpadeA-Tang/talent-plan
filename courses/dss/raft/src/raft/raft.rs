@@ -8,16 +8,17 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use super::{errors::*, raftlog};
 use super::persister::*;
 use super::progress::*;
+use super::{errors::*, raftlog};
 
 const ELECTION_TIMEOUT: u64 = 150;
 const HEARTBEAT_TIMEOUT: u64 = 20;
 const SLEEP_DURATION: u64 = 5;
 
-const PRINT_ELECTION: bool = true;
-const PRINT_APPEND: bool = true;
+const PRINT_ELECTION: bool = false;
+const PRINT_APPEND: bool = false;
+const PRINT_APPLY: bool = false;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -33,7 +34,7 @@ pub enum ApplyMsg {
         term: u64,
         index: u64,
     },
-    Shutdown
+    Shutdown,
 }
 
 /// State of a raft peer.
@@ -939,10 +940,12 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
             continue;
         }
         rf_locked.randomized_election_timeout = gen_randomized_timeout();
-        println!(
-            "[{}] randomzied election timeout now: {}",
-            rf_locked.me, rf_locked.randomized_election_timeout
-        );
+        if PRINT_ELECTION {
+            println!(
+                "[{}] randomzied election timeout now: {}",
+                rf_locked.me, rf_locked.randomized_election_timeout
+            );
+        }
 
         let (mut tx_timeout, mut rx_timeout): (UnboundedSender<bool>, UnboundedReceiver<bool>) =
             unbounded();
@@ -1004,7 +1007,9 @@ pub fn background_worker(rf: Arc<Mutex<Raft>>) {
                                 println!("[{}] compaign fails due to rejection, the randomized_election_timeout now is: {}", rf_locked.me, rf_locked.randomized_election_timeout);
                                 break;
                             }
-                            println!("[{}] compaign result {:?}", rf_locked.me, vote_resp);
+                            if PRINT_ELECTION {
+                                println!("[{}] compaign result {:?}", rf_locked.me, vote_resp);
+                            }
                         }
                     }
                 };
@@ -1079,7 +1084,9 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                 }
                 let commit_idx = rf_locked.raft_log.commit_idx;
                 rf_locked.applying = true;
-                println!("[{}] is applying", rf_locked.me);
+                if PRINT_APPLY {
+                    println!("[{}] is applying", rf_locked.me);
+                }
                 drop(rf_locked);
 
                 for msg in apply_msgs {
@@ -1089,7 +1096,9 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                 let mut rf_locked = rf.lock().unwrap();
                 rf_locked.raft_log.apply_idx = commit_idx;
                 rf_locked.applying = false;
-                println!("[{}] finishes applying", rf_locked.me);
+                if PRINT_APPLY {
+                    println!("[{}] finishes applying", rf_locked.me);
+                }
             }
             ApplyFlag::Snapshot(msg) => {
                 let rf_locked = rf.lock().unwrap();

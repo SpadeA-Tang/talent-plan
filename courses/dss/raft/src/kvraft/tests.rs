@@ -26,6 +26,12 @@ const RAFT_ELECTION_TIMEOUT: Duration = Duration::from_millis(1000);
 
 const LINEARIZABILITY_CHECK_TIMEOUT: Duration = Duration::from_millis(1000);
 
+#[test]
+fn test_basic_3a() {
+    // Test: one client (3A) ...
+    generic_test("3A", 1, false, false, false, None)
+}
+
 // get/put/append that keep counts
 fn get(cfg: &Config, ck: &Clerk, key: &str) -> String {
     let v = ck.get(key.to_owned());
@@ -554,11 +560,7 @@ fn generic_test_linearizability(
     }
 }
 
-#[test]
-fn test_basic_3a() {
-    // Test: one client (3A) ...
-    generic_test("3A", 1, false, false, false, None)
-}
+
 
 #[test]
 fn test_concurrent_3a() {

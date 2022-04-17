@@ -1,18 +1,20 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::thread;
+use std::thread::JoinHandle;
 use std::time::Duration;
 
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
-use futures::SinkExt;
-use futures::StreamExt;
+use futures::lock::Mutex;
+use futures::{SinkExt, StreamExt};
 type CallBack<T> = UnboundedSender<T>;
 
 use crate::proto::kvraftpb::*;
 use crate::raft;
 use crate::raft::node;
 use crate::raft::raft::ApplyMsg;
+
+use futures::executor::block_on;
 
 pub struct KvServer {
     pub rf: node::Node,
@@ -82,8 +84,6 @@ impl KvServer {
     }
 }
 
-use futures::executor::block_on;
-
 impl KvServer {
     /// Only for suppressing deadcode warnings.
     #[doc(hidden)]
@@ -96,7 +96,7 @@ impl KvServer {
         loop {
             block_on(async {
                 while let Some(apply_msg) = apply_ch.next().await {
-                    let mut server_locked = server.lock().unwrap();
+                    let mut server_locked = server.lock().await;
                     if server_locked.shutdown {
                         return;
                     }
@@ -124,7 +124,7 @@ impl KvServer {
                                 let request: PutAppendRequest = labcodec::decode(&command.data)
                                     .expect("committed command is not an entry");
                                 let mut cb = server_locked.get_cb(index);
-                                let kv_table = &mut server.lock().unwrap().kv_table;
+                                let kv_table = &mut server.lock().await.kv_table;
                                 // Append
                                 if request.op == 1 {
                                     kv_table.insert(request.key, request.value);
@@ -173,19 +173,28 @@ impl KvServer {
 pub struct Node {
     // Your definitions here.
     server: Arc<Mutex<KvServer>>,
+
+    workers: Arc<Mutex<Vec<JoinHandle<()>>>>,
 }
 
 impl Node {
     pub fn new(kv: KvServer) -> Node {
         // Your code here.
+        let id = kv.me;
         let node = Node {
             server: Arc::new(Mutex::new(kv)),
+            workers: Arc::new(Mutex::new(Vec::new())),
         };
 
         let server = node.server.clone();
-        let apply_ch = server.lock().unwrap().take_apply_ch();
-
-        KvServer::apply_worker(server, apply_ch);
+        let apply_ch = block_on(async { node.server.lock().await }).take_apply_ch();
+        let worker = thread::Builder::new()
+            .name(format!("ApplyWorker-{}", id))
+            .spawn(move || {
+                KvServer::apply_worker(server, apply_ch);
+            })
+            .unwrap();
+        block_on(async { node.workers.lock().await }).push(worker);
 
         node
     }
@@ -215,80 +224,10 @@ impl Node {
 
     pub fn get_state(&self) -> raft::raft::State {
         // Your code here.
-        self.server.lock().unwrap().rf.get_state()
-    }
-}
-
-pub enum RequestRes {
-    Timeout,
-    Success(String),
-    Other,
-}
-
-#[async_trait::async_trait]
-impl KvService for Node {
-    // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
-    async fn get(&self, arg: GetRequest) -> labrpc::Result<GetReply> {
-        // Your code here.
-        if !self.is_leader() {
-            return Ok(GetReply {
-                wrong_leader: true,
-                err: String::new(),
-                value: String::new(),
-            });
-        }
-
-        let mut reply = GetReply::default();
-        reply.wrong_leader = true;
-
-        let (cb, mut rx): (UnboundedSender<RequestRes>, UnboundedReceiver<RequestRes>) =
-            unbounded();
-
-        let mut timeout_cb = cb.clone();
-        // 超时提醒
-        let _ = thread::spawn(move || {
-            thread::sleep(Duration::from_millis(200));
-            let _ =
-                futures::executor::block_on(async { timeout_cb.send(RequestRes::Timeout).await });
-        });
-        let mut server = self.server.lock().unwrap();
-        let mut data = vec![];
-        labcodec::encode(&arg, &mut data).unwrap();
-        let raft_command = RaftCommand { op_type: 0, data };
-
-        if let Ok((index, _)) = server.rf.start(&raft_command) {
-            server.push_apply_ctx(ApplyCtx { cb, index });
-            drop(server);
-            let res = block_on(async { rx.next().await }).unwrap();
-
-            match res {
-                RequestRes::Timeout => {
-                    reply.err = String::from("Timeout");
-                }
-                RequestRes::Success(value) => {
-                    reply.wrong_leader = false;
-                    reply.value = value;
-                }
-                RequestRes::Other => {
-                    unimplemented!();
-                }
-            }
-        }
-
-        Ok(reply)
+        block_on(async { self.server.lock().await }).rf.get_state()
     }
 
-    // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
-    // todo: duplicate detections
-    async fn put_append(&self, arg: PutAppendRequest) -> labrpc::Result<PutAppendReply> {
-        // Your code here.
-        if !self.is_leader() {
-            return Ok(PutAppendReply {
-                wrong_leader: true,
-                err: String::new(),
-            });
-        }
-
+    pub async fn put_append(&self, arg: PutAppendRequest) -> PutAppendReply {
         let mut reply = PutAppendReply::default();
         reply.wrong_leader = true;
 
@@ -298,11 +237,10 @@ impl KvService for Node {
         // 超时提醒
         let _ = thread::spawn(move || {
             thread::sleep(Duration::from_millis(200));
-            let _ =
-                futures::executor::block_on(async { timeout_cb.send(RequestRes::Timeout).await });
+            let _ = block_on(async { timeout_cb.send(RequestRes::Timeout).await });
         });
 
-        let mut server = self.server.lock().unwrap();
+        let mut server = self.server.lock().await;
         let mut data = vec![];
         labcodec::encode(&arg, &mut data).unwrap();
         let raft_command = RaftCommand { op_type: 1, data };
@@ -310,7 +248,8 @@ impl KvService for Node {
         if let Ok((index, _)) = server.rf.start(&raft_command) {
             server.push_apply_ctx(ApplyCtx { cb, index });
             drop(server);
-            let res = block_on(async { rx.next().await }).unwrap();
+
+            let res = rx.next().await.unwrap();
 
             match res {
                 RequestRes::Timeout => {
@@ -325,8 +264,74 @@ impl KvService for Node {
                     unimplemented!();
                 }
             }
+        } else {
+            reply.wrong_leader = true;
         }
 
-        Ok(reply)
+        reply
+    }
+
+    pub async fn get(&self, arg: GetRequest) -> GetReply {
+        let mut reply = GetReply::default();
+        reply.wrong_leader = true;
+
+        let (cb, mut rx): (UnboundedSender<RequestRes>, UnboundedReceiver<RequestRes>) =
+            unbounded();
+
+        let mut timeout_cb = cb.clone();
+        // 超时提醒
+        let _ = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(200));
+            let _ = block_on(async { timeout_cb.send(RequestRes::Timeout).await });
+        });
+        let mut server = self.server.lock().await;
+        let mut data = vec![];
+        labcodec::encode(&arg, &mut data).unwrap();
+        let raft_command = RaftCommand { op_type: 0, data };
+
+        if let Ok((index, _)) = server.rf.start(&raft_command) {
+            server.push_apply_ctx(ApplyCtx { cb, index });
+            drop(server);
+            let res = rx.next().await.unwrap();
+
+            match res {
+                RequestRes::Timeout => {
+                    reply.err = String::from("Timeout");
+                }
+                RequestRes::Success(value) => {
+                    reply.wrong_leader = false;
+                    reply.value = value;
+                }
+                RequestRes::Other => {
+                    unimplemented!();
+                }
+            }
+        } else {
+            reply.wrong_leader = true;
+        }
+
+        reply
+    }
+}
+
+pub enum RequestRes {
+    Timeout,
+    Success(String),
+    Other,
+}
+
+#[async_trait::async_trait]
+impl KvService for Node {
+    // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
+    async fn get(&self, arg: GetRequest) -> labrpc::Result<GetReply> {
+        // Your code here.
+        Ok(self.get(arg).await)
+    }
+
+    // CAVEATS: Please avoid locking or sleeping here, it may jam the network.
+    // todo: duplicate detections
+    async fn put_append(&self, arg: PutAppendRequest) -> labrpc::Result<PutAppendReply> {
+        // Your code here.
+        Ok(self.put_append(arg).await)
     }
 }
