@@ -55,7 +55,7 @@ impl KvServer {
             kv_table: HashMap::new(),
             call_backs: Vec::new(),
             apply_ch: Some(apply_ch),
-            shutdown: true,
+            shutdown: false,
         }
     }
 
@@ -124,16 +124,16 @@ impl KvServer {
                                 let request: PutAppendRequest = labcodec::decode(&command.data)
                                     .expect("committed command is not an entry");
                                 let mut cb = server_locked.get_cb(index);
-                                let kv_table = &mut server.lock().await.kv_table;
+                                let kv_table = &mut server_locked.kv_table;
                                 // Append
                                 if request.op == 1 {
-                                    kv_table.insert(request.key, request.value);
-                                // Put
-                                } else if request.op == 2 {
                                     let old_value = kv_table
                                         .get_mut(&request.key)
                                         .expect("It should have a value");
                                     old_value.push_str(&request.value);
+                                // Put
+                                } else if request.op == 2 {
+                                    kv_table.insert(request.key, request.value);
                                 } else {
                                     unreachable!();
                                 }

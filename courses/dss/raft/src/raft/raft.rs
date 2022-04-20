@@ -16,9 +16,9 @@ const ELECTION_TIMEOUT: u64 = 150;
 const HEARTBEAT_TIMEOUT: u64 = 20;
 const SLEEP_DURATION: u64 = 5;
 
-const PRINT_ELECTION: bool = false;
-const PRINT_APPEND: bool = false;
-const PRINT_APPLY: bool = false;
+const PRINT_ELECTION: bool = true;
+const PRINT_APPEND: bool = true;
+const PRINT_APPLY: bool = true;
 
 /// As each Raft peer becomes aware that successive log entries are committed,
 /// the peer should send an `ApplyMsg` to the service (or tester) on the same
@@ -745,8 +745,8 @@ impl Raft {
 
         if PRINT_APPEND {
             println!(
-                "[{}] start command of index {} and term {}",
-                self.me, next_log_index, term
+                "[{}] start command {:?} of index {} and term {}",
+                self.me, command, next_log_index, term
             );
         }
         self.bcast_append();
@@ -1090,7 +1090,7 @@ pub fn apply_worker(rf: Arc<Mutex<Raft>>, rx: std::sync::mpsc::Receiver<ApplyFla
                 drop(rf_locked);
 
                 for msg in apply_msgs {
-                    let _ = futures::executor::block_on(async { sender.send(msg).await });
+                    futures::executor::block_on(async { sender.send(msg).await }).unwrap();
                 }
 
                 let mut rf_locked = rf.lock().unwrap();
